@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "kipy"
+version = "0.1.0a0"
+description = "KiCad API Python Bindings"
+authors = ["The KiCad Development Team"]
+license = "GPL-3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+protobuf = "^4.21.12"
+pynng = "^0.7.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
