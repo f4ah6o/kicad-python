@@ -11,6 +11,7 @@ $ cmake -G Ninja -DKICAD_IPC_API=ON -DKICAD_BUILD_PYTHON_API=ON ../kicad
 $ ninja enum_definitions
 $ cd ..
 $ python3 build-tools/enums.py
+$ python3 build-tools/generate_protos.py
 ```
 
 Note you may need to pass additional args to cmake to get KiCad building;
