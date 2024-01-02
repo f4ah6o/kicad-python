@@ -16,6 +16,7 @@ protoletariat = "^3.2.19"
 # [tool.poetry.build]
 # generate-setup-file = false
 # script = "build.py"
+mypy-protobuf = "^3.5.0"
 
 [build-system]
 requires = ["poetry-core"]

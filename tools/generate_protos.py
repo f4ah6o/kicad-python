@@ -46,6 +46,7 @@ if __name__ == '__main__':
     print("Generating Python classes from protobuf files...")
     subprocess.run([args.protoc,
            "--python_out=" + output_path,
+           "--mypy_out=" + output_path,
            "--proto_path=" + input_path,
            *proto_sources])
 

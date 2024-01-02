@@ -26,3 +26,4 @@ poetry.lock
 # These should be generated, not checked in
 kipy/enums/_enums.py
 kipy/**/*_pb2.py
+kipy/**/*_pb2.pyi
