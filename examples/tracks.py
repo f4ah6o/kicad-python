@@ -27,8 +27,8 @@ from kipy.common.commands import (
     end_commit
 )
 from kipy.board.commands import get_tracks, create_track, update_track
-from kipy.board.types.track_pb2 import TRACK
-from kipy.common.types.frame_type_pb2 import FRAME_TYPE
+from kipy.board.types.track_pb2 import Track
+from kipy.common.types.base_types_pb2 import FrameType
 from kipy.util import from_mm
 from kipy.enums import PCB_LAYER_ID
 
@@ -36,7 +36,7 @@ def create_some_tracks():
     begin_commit()
 
     for i in range(5):
-        t = TRACK()
+        t = Track()
         t.start_x = from_mm(randrange(1, 100))
         t.start_y = from_mm(randrange(1, 100))
         t.end_x = from_mm(randrange(1, 100))
@@ -46,7 +46,7 @@ def create_some_tracks():
         create_track(t)
 
     end_commit("Created some tracks")
-    refresh_editor(FRAME_TYPE.FT_PCB_EDITOR)
+    refresh_editor(FrameType.FT_PCB_EDITOR)
 
 def make_them_bigger():
     begin_commit()

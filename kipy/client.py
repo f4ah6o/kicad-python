@@ -20,9 +20,7 @@ import pynng
 
 from google.protobuf.message import Message
 
-from .common.envelope_pb2 import API_REQUEST, API_RESPONSE
-from .common.types.api_status_pb2 import API_STATUS
-
+from .common.envelope_pb2 import ApiRequest, ApiResponse, ApiStatus
 
 class KiCadClient:
     def __init__(self):
@@ -39,7 +37,7 @@ class KiCadClient:
         if self._conn is None:
             self._connect()
         
-        envelope = API_REQUEST()
+        envelope = ApiRequest()
         envelope.message.Pack(command)
 
         try:
@@ -50,10 +48,10 @@ class KiCadClient:
             raise e
 
         reply_data = self._conn.recv_msg()
-        reply = API_RESPONSE()
+        reply = ApiResponse()
         reply.ParseFromString(reply_data.bytes)
 
-        if reply.status == API_STATUS.AS_OK:
+        if reply.status == ApiStatus.AS_OK:
             if response is not None:
                 reply.message.Unpack(response)
             return True

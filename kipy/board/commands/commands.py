@@ -16,26 +16,25 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from ... import _client
-from .board_management_pb2 import *
-from .board_objects_pb2 import *
+from .board_commands_pb2 import *
 
 def get_tracks():
-    r = TRACKS_RESPONSE()
-    if _client.send(GET_TRACKS(), r):
+    r = TracksResponse()
+    if _client.send(GetTracks(), r):
         return r.tracks
     raise IOError
 
 def create_track(track):
-    reply = TRACK_RESPONSE()
-    request = CREATE_TRACK()
+    reply = TracksResponse()
+    request = CreateTrack()
     request.track.CopyFrom(track)
     if _client.send(request, reply):
         return reply.track
     raise IOError
 
 def update_track(track):
-    reply = TRACK_RESPONSE()
-    request = UPDATE_TRACK()
+    reply = TracksResponse()
+    request = UpdateTrack()
     request.id.value = track.id.value
     request.track.CopyFrom(track)
     if _client.send(request, reply):

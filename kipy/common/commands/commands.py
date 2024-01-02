@@ -16,17 +16,15 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from ... import _client
-from .editor_commands_pb2 import REFRESH_EDITOR
-from .get_version_pb2 import GET_VERSION, GET_VERSION_RESPONSE
-from .run_action_pb2 import RUN_ACTION, RUN_ACTION_RESPONSE
-from .commit_pb2 import BEGIN_COMMIT, END_COMMIT
+from .base_commands_pb2 import *
+from .editor_commands_pb2 import *
 
 def get_version():
     """
     :return: the KiCad version as a string, including any package-specific info
     """
-    r = GET_VERSION_RESPONSE()
-    if _client.send(GET_VERSION(), r):
+    r = GetVersionResponse()
+    if _client.send(GetVersion(), r):
         return r.version.full_version
     raise IOError
 
@@ -39,22 +37,22 @@ def run_action(action: str):
     :param action: the name of a KiCad TOOL_ACTION
     :return: a value from the KIAPI.COMMON.COMMANDS.RUN_ACTION_STATUS enum
     """
-    r = RUN_ACTION_RESPONSE()
-    if _client.send(RUN_ACTION(), r):
+    r = RunActionResponse()
+    if _client.send(RunAction(), r):
         return r.status
     raise IOError
 
 def refresh_editor(editor):
-    r = REFRESH_EDITOR()
+    r = RefreshEditor()
     r.frame = editor
     if _client.send(r, None):
         return
     raise IOError
 
 def begin_commit():
-    _client.send(BEGIN_COMMIT())
+    _client.send(BeginCommit())
 
 def end_commit(message: str):
-    m = END_COMMIT()
-    m.message = message;
+    m = EndCommit()
+    m.message = message
     _client.send(m)
