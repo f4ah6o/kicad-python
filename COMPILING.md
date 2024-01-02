@@ -1,26 +1,32 @@
 # Building kipy
 
-First `git submodule update --init` to add KiCad's source code as a submodule.
+First, install `poetry` and use it to install the required Python dependencies
+
+```sh
+$ pip3 install poetry
+$ poetry install
+```
+
+Next, run `git submodule update --init` to add KiCad's source code as a submodule.
 
 Then use the enum_definitions tool in KiCad's tree to generate JSON exports
 of all the KiCad enums used by the API:
 
 ```sh
 $ mkdir kicad-build && cd kicad-build
-$ cmake -G Ninja -DKICAD_IPC_API=ON -DKICAD_BUILD_PYTHON_API=ON ../kicad
+$ cmake -G Ninja -DKICAD_IPC_API=ON -DKICAD_BUILD_ENUM_EXPORTER=ON ../kicad
 $ ninja enum_definitions
 $ cd ..
-$ python3 build-tools/enums.py
-$ python3 build-tools/generate_protos.py
+$ poetry run python build-tools/enums.py
+$ poetry run python build-tools/generate_protos.py
 ```
 
-Note you may need to pass additional args to cmake to get KiCad building;
-see the KiCad build documentation for your platform.
+Note you may need to pass additional args to CMake to get KiCad building;
+see the KiCad build documentation for your platform at dev-docs.kicad.org.
 
 To package the Python library for installation:
 
 ```sh
-$ pip3 install poetry
 $ poetry build
 ```
 
