@@ -17,4 +17,6 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED.  DO NOT MODIFY IT.
 
+# flake8: noqa
+
 from ._enums import *
