@@ -12,13 +12,13 @@ protobuf = "^4.21.12"
 pynng = "^0.7.2"
 Jinja2 = "^3.1.2"
 protoletariat = "^3.2.19"
-
-# [tool.poetry.build]
-# generate-setup-file = false
-# script = "build.py"
 mypy-protobuf = "^3.5.0"
 result = "^0.16.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# [tool.poetry.build]
+# generate-setup-file = false
+# script = "build.py"

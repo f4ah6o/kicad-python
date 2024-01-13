@@ -20,7 +20,7 @@ from result import Ok, Err
 
 from google.protobuf.message import Message
 
-from .common.envelope_pb2 import ApiRequest, ApiResponse, ApiResponseStatus, ApiStatusCode
+from .common.envelope_pb2 import ApiRequest, ApiResponse, ApiStatusCode
 
 class KiCadClient:
     def __init__(self, socket_path: str):
@@ -30,7 +30,7 @@ class KiCadClient:
     def _connect(self):
         self._conn = pynng.Req0(dial=self._socket_path, send_timeout=1000, recv_timeout=1000)
 
-    def send(self, command: Message, response_type: type):
+    def send(self, command: Message, response_type: Message):
         envelope = ApiRequest()
         envelope.message.Pack(command)
 
