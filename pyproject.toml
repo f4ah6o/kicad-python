@@ -5,6 +5,7 @@ description = "KiCad API Python Bindings"
 authors = ["The KiCad Development Team"]
 license = "GPL-3"
 readme = "README.md"
+include = ["**/kipy/**/*.py", "**/kipy/**/*.pyi"]
 
 [tool.poetry.dependencies]
 python = "^3.8"

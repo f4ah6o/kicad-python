@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import platform
 import random
 import string
@@ -28,15 +29,24 @@ class ApiError(Exception):
     pass
 
 def default_socket_path() -> str:
-    return 'ipc://\\.\\pipe\\kicad' if platform.system() == 'Windows' else 'ipc:///tmp/kicad.sock'
+    path = os.environ.get('KICAD_API_SOCKET')
+    if path is not None:
+        return path
+    return 'ipc://\\.\\pipe\\kicad' if platform.system() == 'Windows' else 'ipc:///tmp/kicad/api.sock'
 
 def random_client_name() -> str:
     return 'anonymous-'+''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
 
+def default_kicad_token() -> str:
+    token = os.environ.get('KICAD_API_TOKEN')
+    if token is not None:
+        return token
+    return ""
+
 class KiCad:
     def __init__(self, socket_path: str=default_socket_path(),
                  client_name: str=random_client_name(),
-                 kicad_token: str=""):
+                 kicad_token: str=default_kicad_token()):
         self._client = KiCadClient(socket_path, client_name, kicad_token)
         
     def get_version(self):

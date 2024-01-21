@@ -17,10 +17,33 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from PyQt6.QtWidgets import *
 from random import randrange
 
 from kipy import KiCad
 
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("KiCad Python Example")
+        btn1 = QPushButton("Check KiCad Version")
+        self.st1 = QLabel("")
+        szr = QVBoxLayout()
+        szr.addWidget(btn1)
+        szr.addWidget(self.st1)
+
+        btn1.clicked.connect(lambda _: self.st1.setText(kicad.get_version()))
+
+        widget = QWidget()
+        widget.setLayout(szr)
+        self.setCentralWidget(widget)
+
+
 if __name__=='__main__':
     kicad = KiCad()
+    app = QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec()
     print(kicad.get_version())
