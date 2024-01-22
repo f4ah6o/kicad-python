@@ -16,11 +16,11 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import pynng
-from result import Ok, Err
+from result import Result, Ok, Err
 
 from google.protobuf.message import Message
 
-from .proto.common import ApiRequest, ApiResponse, ApiStatusCode
+from kipy.proto.common import ApiRequest, ApiResponse, ApiStatusCode
 
 class KiCadClient:
     def __init__(self, socket_path: str, client_name: str, kicad_token: str):
@@ -32,7 +32,7 @@ class KiCadClient:
     def _connect(self):
         self._conn = pynng.Req0(dial=self._socket_path, send_timeout=1000, recv_timeout=1000)
 
-    def send(self, command: Message, response_type: Message):
+    def send(self, command: Message, response_type: Message) -> Result[Message, str]:
         envelope = ApiRequest()
         envelope.message.Pack(command)
         envelope.header.kicad_token = self._kicad_token

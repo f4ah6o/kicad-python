@@ -19,11 +19,14 @@ import os
 import platform
 import random
 import string
+from typing import List
 
 from result import Ok, Err
 
-from .client import KiCadClient
-from .proto.common import commands
+from kipy.board import Board
+from kipy.client import KiCadClient
+from kipy.proto.common import commands
+from kipy.proto.common.types import DocumentType, DocumentSpecifier
 
 class ApiError(Exception):
     pass
@@ -50,9 +53,7 @@ class KiCad:
         self._client = KiCadClient(socket_path, client_name, kicad_token)
         
     def get_version(self):
-        """
-        :return: the KiCad version as a string, including any package-specific info
-        """
+        """Returns the KiCad version as a string, including any package-specific info"""
         match self._client.send(commands.GetVersion(), commands.GetVersionResponse):
             case Ok(response):
                 return response.version.full_version
@@ -60,30 +61,33 @@ class KiCad:
                 raise ApiError(e)
 
     def run_action(self, action: str):
-        """
-        Runs a KiCad tool action, if it is available.
-        WARNING: This is an unstable API and is not intended for use other than by API developers.
-        KiCad does not guarantee the stability of action names, and running actions may have unintended
-        side effects.
+        """Runs a KiCad tool action, if it is available
+
+        WARNING: This is an unstable API and is not intended for use other
+        than by API developers. KiCad does not guarantee the stability of
+        action names, and running actions may have unintended side effects.
         :param action: the name of a KiCad TOOL_ACTION
         :return: a value from the KIAPI.COMMON.COMMANDS.RUN_ACTION_STATUS enum
         """
-        r = commands.RunActionResponse()
-        if self._client.send(commands.RunAction(), r):
-            return r.status
-        raise IOError
+        match self._client.send(commands.RunAction(), commands.RunActionResponse):
+            case Ok(response):
+                return response.status
+            case Err(e):
+                raise ApiError(e)
 
-    def refresh_editor(self, editor):
-        r = commands.RefreshEditor()
-        r.frame = editor
-        if self._client.send(r, None):
-            return
-        raise IOError
-
-    def begin_commit(self):
-        self._client.send(commands.BeginCommit())
-
-    def end_commit(self, message: str):
-        m = commands.EndCommit()
-        m.message = message
-        self._client.send(m)
+    def get_open_documents(self, doc_type: DocumentType) -> List[DocumentSpecifier]:
+        """Retrieves a list of open documents matching the given type"""
+        command = commands.GetOpenDocuments()
+        command.type = doc_type
+        match self._client.send(command, commands.GetOpenDocumentsResponse):
+            case Ok(response):
+                return response.documents
+            case Err(e):
+                raise ApiError(e)
+            
+    def get_board(self) -> Board:
+        """Retrieves an open board"""
+        docs = self.get_open_documents(DocumentType.DOCTYPE_PCB)
+        if len(docs) == 0:
+            raise ApiError("Expected to be able to retrieve at least one board")
+        return Board(self._client, docs[0])

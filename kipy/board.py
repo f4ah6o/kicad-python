@@ -15,5 +15,16 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .proto.board import *
+from kipy.client import KiCadClient
+from kipy.proto.common.types import *
+from kipy.proto.board import *
 
+
+class Board:
+    def __init__(self, kicad: KiCadClient, document: DocumentSpecifier):
+        self._kicad = kicad
+        self._doc = document
+
+    def get_name(self) -> str:
+        """Returns the file name of the board"""
+        return self._doc.board_filename

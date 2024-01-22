@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This program source code file is part of KiCad, a free EDA CAD application.
 #
 # Copyright (C) 2024 KiCad Developers
@@ -15,6 +17,9 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
+from kipy import KiCad
 
-from kipy.units import from_mm, to_mm
+if __name__=='__main__':
+    kicad = KiCad()
+    board = kicad.get_board()
+    print(board.get_name())
