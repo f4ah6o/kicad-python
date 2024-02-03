@@ -20,8 +20,10 @@
 from kipy import KiCad
 from kipy.enums import PCB_LAYER_ID
 from kipy.proto.board.board_types_pb2 import FootprintInstance, Text
+from kipy.proto.board.board_commands_pb2 import InteractiveMoveItems
 from kipy.util import from_mm
 from google.protobuf.any_pb2 import Any
+from google.protobuf.empty_pb2 import Empty
 
 
 if __name__=='__main__':
@@ -50,4 +52,13 @@ if __name__=='__main__':
         offset += from_mm(1.5)
         layer_idx += 1
 
-    board.create_items(fpi)
+    created = board.create_items(fpi)
+
+    if len(created) == 1:
+        created_fp = FootprintInstance()
+        created[0].item.Unpack(created_fp)
+
+        cmd = InteractiveMoveItems()
+        cmd.board.CopyFrom(board._doc)
+        cmd.items.append(created_fp.id)
+        board._kicad.send(cmd, Empty)
