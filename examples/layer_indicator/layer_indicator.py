@@ -19,9 +19,13 @@
 
 from kipy import KiCad
 from kipy.enums import PCB_LAYER_ID
+
 from kipy.proto.board.board_types_pb2 import FootprintInstance, Text
-from kipy.proto.board.board_commands_pb2 import InteractiveMoveItems
-from kipy.util import from_mm
+from kipy.proto.board.board_commands_pb2 import (
+    InteractiveMoveItems
+)
+from kipy.proto.board.board_pb2 import BoardLayerClass
+
 from google.protobuf.any_pb2 import Any
 from google.protobuf.empty_pb2 import Empty
 
@@ -29,7 +33,17 @@ from google.protobuf.empty_pb2 import Empty
 if __name__=='__main__':
     kicad = KiCad()
     board = kicad.get_board()
-    stackup = board.get_stackup()   
+    stackup = board.get_stackup()
+    defaults = board.get_graphics_defaults()[BoardLayerClass.BLC_COPPER]
+
+    sizing_text = Text()
+    sizing_text.layer.layer_id = PCB_LAYER_ID.F_Cu
+    sizing_text.position.x_nm = 0
+    sizing_text.position.y_nm = 0
+    sizing_text.text = "0"
+    sizing_text.attributes.CopyFrom(defaults.text)
+
+    char_width = board.get_text_extents(sizing_text).size.x
 
     copper_layers = [layer for layer in stackup.layers
                      if layer.layer.layer_id <= PCB_LAYER_ID.B_Cu
@@ -50,12 +64,17 @@ if __name__=='__main__':
         f = Text()
         f.layer.layer_id = copper_layer.layer.layer_id
         f.text = "%d" % layer_idx
+        f.locked = True
         f.position.x_nm = offset
         f.position.y_nm = 0
         fmsg = Any()
         fmsg.Pack(f)
         fp.items.append(fmsg)
-        offset += from_mm(1.5)
+
+        padding = 1 if layer_idx == 9 else 0.5
+        item_width = int((len(f.text) + padding) * char_width)
+
+        offset += item_width
         layer_idx += 1
 
     created = board.create_items(fpi)

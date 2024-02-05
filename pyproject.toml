@@ -14,7 +14,6 @@ pynng = "^0.7.2"
 Jinja2 = "^3.1.2"
 protoletariat = "^3.2.19"
 mypy-protobuf = "^3.5.0"
-result = "^0.16.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -15,15 +15,26 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List
+from typing import List, Dict
 from google.protobuf.message import Message
-from result import Ok, Err
 
-from kipy.client import KiCadClient, ApiError
+from kipy.client import KiCadClient
+from kipy.geometry import Box2
 from kipy.proto.common.types import DocumentSpecifier
-from kipy.proto.common.commands.editor_commands_pb2 import *
-from kipy.proto.board.board_pb2 import BoardStackup, BoardStackupLayer
-from kipy.proto.board.board_commands_pb2 import GetBoardStackup, BoardStackupResponse
+from kipy.proto.common.commands.editor_commands_pb2 import (
+    CreateItems, CreateItemsResponse,
+    BoundingBoxResponse
+)
+from kipy.proto.board.board_pb2 import (
+    BoardStackup, BoardStackupLayer,
+    BoardLayerGraphicsDefaults, BoardLayerClass
+)
+from kipy.proto.board.board_commands_pb2 import (
+    GetBoardStackup, BoardStackupResponse,
+    GetGraphicsDefaults, GraphicsDefaultsResponse,
+    GetTextExtents
+)
+from kipy.proto.board import board_types_pb2
 from kipy.util import pack_any
 
 class Board:
@@ -41,17 +52,28 @@ class Board:
         command = CreateItems()
         command.items.extend([pack_any(i) for i in items])
         command.header.document.CopyFrom(self._doc)
-        match self._kicad.send(command, CreateItemsResponse):
-            case Ok(response):
-                return response.created_items
-            case Err(e):
-                raise ApiError(e)
+        return self._kicad.send(command, CreateItemsResponse).created_items
             
     def get_stackup(self) -> BoardStackup:
         command = GetBoardStackup()
         command.board.CopyFrom(self._doc)
-        match self._kicad.send(command, BoardStackupResponse):
-            case Ok(response):
-                return response.stackup
-            case Err(e):
-                raise ApiError(e)
+        return self._kicad.send(command, BoardStackupResponse).stackup
+    
+    def get_graphics_defaults(self) -> Dict[int, BoardLayerGraphicsDefaults]:
+        cmd = GetGraphicsDefaults()
+        cmd.board.CopyFrom(self._doc)
+        reply = self._kicad.send(cmd, GraphicsDefaultsResponse)
+        return {
+            BoardLayerClass.BLC_SILKSCREEN: reply.defaults.layers[0],
+            BoardLayerClass.BLC_COPPER: reply.defaults.layers[1],
+            BoardLayerClass.BLC_EDGES: reply.defaults.layers[2],
+            BoardLayerClass.BLC_COURTYARD: reply.defaults.layers[3],
+            BoardLayerClass.BLC_FABRICATION: reply.defaults.layers[4],
+            BoardLayerClass.BLC_OTHER: reply.defaults.layers[5]
+        }
+    
+    def get_text_extents(self, text: board_types_pb2.Text) -> Box2:
+        cmd = GetTextExtents()
+        cmd.text.CopyFrom(text)
+        reply = self._kicad.send(cmd, BoundingBoxResponse)
+        return Box2(reply.position, reply.size)

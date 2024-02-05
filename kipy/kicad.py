@@ -21,8 +21,6 @@ import random
 import string
 from typing import List
 
-from result import Ok, Err
-
 from kipy.board import Board
 from kipy.client import KiCadClient, ApiError
 from kipy.proto.common import commands
@@ -51,11 +49,8 @@ class KiCad:
         
     def get_version(self):
         """Returns the KiCad version as a string, including any package-specific info"""
-        match self._client.send(commands.GetVersion(), commands.GetVersionResponse):
-            case Ok(response):
-                return response.version.full_version
-            case Err(e):
-                raise ApiError(e)
+        response = self._client.send(commands.GetVersion(), commands.GetVersionResponse)
+        return response.version.full_version
 
     def run_action(self, action: str):
         """Runs a KiCad tool action, if it is available
@@ -66,21 +61,14 @@ class KiCad:
         :param action: the name of a KiCad TOOL_ACTION
         :return: a value from the KIAPI.COMMON.COMMANDS.RUN_ACTION_STATUS enum
         """
-        match self._client.send(commands.RunAction(), commands.RunActionResponse):
-            case Ok(response):
-                return response.status
-            case Err(e):
-                raise ApiError(e)
-
+        return self._client.send(commands.RunAction(), commands.RunActionResponse)
+    
     def get_open_documents(self, doc_type: DocumentType) -> List[DocumentSpecifier]:
         """Retrieves a list of open documents matching the given type"""
         command = commands.GetOpenDocuments()
         command.type = doc_type
-        match self._client.send(command, commands.GetOpenDocumentsResponse):
-            case Ok(response):
-                return response.documents
-            case Err(e):
-                raise ApiError(e)
+        response = self._client.send(command, commands.GetOpenDocumentsResponse)
+        return response.documents
             
     def get_board(self) -> Board:
         """Retrieves an open board"""
