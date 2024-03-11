@@ -19,15 +19,13 @@
 
 from kipy import KiCad
 from kipy.enums import PCB_LAYER_ID
+from kipy.geometry import Vector2
+from kipy.board import BoardLayerClass
+from kipy.board_types import Text
 
-from kipy.proto.board.board_types_pb2 import FootprintInstance, Text
-from kipy.proto.board.board_commands_pb2 import (
-    InteractiveMoveItems
-)
-from kipy.proto.board.board_pb2 import BoardLayerClass
+from kipy.proto.board.board_types_pb2 import FootprintInstance
 
 from google.protobuf.any_pb2 import Any
-from google.protobuf.empty_pb2 import Empty
 
 
 if __name__=='__main__':
@@ -36,15 +34,13 @@ if __name__=='__main__':
     stackup = board.get_stackup()
     defaults = board.get_graphics_defaults()[BoardLayerClass.BLC_COPPER]
 
-    sizing_pcb_text = Text()
-    sizing_text = sizing_pcb_text.text
-    sizing_text.layer.id = PCB_LAYER_ID.F_Cu
-    sizing_text.position.x_nm = 0
-    sizing_text.position.y_nm = 0
+    sizing_text = Text()
+    sizing_text.layer = PCB_LAYER_ID.F_Cu
+    sizing_text.position = Vector2.from_xy(0, 0)
     sizing_text.text = "0"
-    sizing_text.attributes.CopyFrom(defaults.text)
+    sizing_text.attributes = defaults.text
 
-    char_width = board.get_text_extents(sizing_pcb_text).size.x
+    char_width = board.get_text_extents(sizing_text).size.x
 
     copper_layers = [layer for layer in stackup.layers
                      if layer.layer.id <= PCB_LAYER_ID.B_Cu
@@ -52,9 +48,9 @@ if __name__=='__main__':
     
     fpi = FootprintInstance()
     fpi.reference_field.text.text.text = "STACKUP1"
-    fpi.reference_field.text.text.attributes.CopyFrom(defaults.text)
+    fpi.reference_field.text.text.attributes.CopyFrom(defaults.text.proto)
     fpi.reference_field.text.text.attributes.visible = False
-    fpi.value_field.text.text.attributes.CopyFrom(defaults.text)
+    fpi.value_field.text.text.attributes.CopyFrom(defaults.text.proto)
     fpi.value_field.text.text.attributes.visible = False
     fpi.attributes.not_in_schematic = True
     fpi.attributes.exclude_from_bill_of_materials = True
@@ -65,20 +61,18 @@ if __name__=='__main__':
     layer_idx = 1
     for copper_layer in copper_layers:
         f = Text()
-        innerText = f.text
-        innerText.layer.id = copper_layer.layer.id
-        innerText.text = "%d" % layer_idx
-        innerText.locked = True
-        innerText.position.x_nm = offset
-        innerText.position.y_nm = 0
-        innerText.attributes.CopyFrom(defaults.text)
-        innerText.attributes.visible = True
+        f.layer = copper_layer.layer.id
+        f.text = "%d" % layer_idx
+        f.locked = True
+        f.position = Vector2.from_xy(offset, 0)
+        f.attributes = defaults.text
+        f.attributes.visible = True
         fmsg = Any()
-        fmsg.Pack(f)
+        fmsg.Pack(f.proto)
         fp.items.append(fmsg)
 
         padding = 1 if layer_idx == 9 else 0.5
-        item_width = int((len(innerText.text) + padding) * char_width)
+        item_width = int((len(f.text) + padding) * char_width)
 
         offset += item_width
         layer_idx += 1
@@ -88,8 +82,4 @@ if __name__=='__main__':
     if len(created) == 1:
         created_fp = FootprintInstance()
         created[0].item.Unpack(created_fp)
-
-        cmd = InteractiveMoveItems()
-        cmd.board.CopyFrom(board._doc)
-        cmd.items.append(created_fp.id)
-        board._kicad.send(cmd, Empty)
+        board.interactive_move(created_fp.id)

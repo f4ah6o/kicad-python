@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # This program source code file is part of KiCad, a free EDA CAD application.
 #
 # Copyright (C) 2024 KiCad Developers
@@ -17,24 +15,40 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from kipy.proto.common.types import base_types_pb2
+from kipy.proto.common import types
+from kipy.wrapper import Wrapper
 
-class Vector2:
-    def __init__(self, proto: base_types_pb2.Vector2):
+class Vector2(Wrapper):
+    """Wraps a kiapi.common.types.Vector2, aka VECTOR2I"""
+    def __init__(self, proto: types.Vector2):
         self._proto = proto
+
+    @classmethod
+    def from_xy(cls, x_nm: int, y_nm: int):
+        """Initialize Vector2 with x and y values in nanometers"""
+        proto = types.Vector2()
+        proto.x_nm = x_nm
+        proto.y_nm = y_nm
+        return cls(proto)
 
     @property
     def x(self) -> int:
-        """The X coordinate, in integer nanometers"""
         return self._proto.x_nm
+    
+    @x.setter
+    def x(self, val: int):
+        self._proto.x_nm = val
     
     @property
     def y(self) -> int:
-        """The Y coordinate, in integer nanometers"""
         return self._proto.y_nm
     
+    @y.setter
+    def y(self, val: int):
+        self._proto.y_nm = val
+
 class Box2:
-    def __init__(self, pos_proto: base_types_pb2.Vector2, size_proto: base_types_pb2.Vector2):
+    def __init__(self, pos_proto: types.Vector2, size_proto: types.Vector2):
         self._pos_proto = pos_proto
         self._size_proto = size_proto
 
