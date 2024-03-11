@@ -53,7 +53,7 @@ class Text(Wrapper):
     
     @locked.setter
     def locked(self, locked: bool):
-        self._proto.text.locked = locked;
+        self._proto.text.locked = locked
 
     @property
     def text(self) -> str:
@@ -70,3 +70,11 @@ class Text(Wrapper):
     @attributes.setter
     def attributes(self, attributes: TextAttributes):
         self._proto.text.attributes.CopyFrom(attributes.proto)
+
+class Footprint(Wrapper):
+    """Represents a library footprint"""
+    pass
+
+class FootprintInstance(Wrapper):
+    """Represents a footprint instance on a board"""
+    pass
