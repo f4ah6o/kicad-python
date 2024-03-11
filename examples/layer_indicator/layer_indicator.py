@@ -21,11 +21,7 @@ from kipy import KiCad
 from kipy.enums import PCB_LAYER_ID
 from kipy.geometry import Vector2
 from kipy.board import BoardLayerClass
-from kipy.board_types import Text
-
-from kipy.proto.board.board_types_pb2 import FootprintInstance
-
-from google.protobuf.any_pb2 import Any
+from kipy.board_types import Text, FootprintInstance
 
 
 if __name__=='__main__':
@@ -47,11 +43,11 @@ if __name__=='__main__':
                      and layer.layer.id >= PCB_LAYER_ID.F_Cu]
     
     fpi = FootprintInstance()
-    fpi.reference_field.text.text.text = "STACKUP1"
-    fpi.reference_field.text.text.attributes.CopyFrom(defaults.text.proto)
-    fpi.reference_field.text.text.attributes.visible = False
-    fpi.value_field.text.text.attributes.CopyFrom(defaults.text.proto)
-    fpi.value_field.text.text.attributes.visible = False
+    fpi.reference_field.text.text = "STACKUP1"
+    fpi.reference_field.text.attributes = defaults.text
+    fpi.reference_field.text.attributes.visible = False
+    fpi.value_field.text.attributes = defaults.text
+    fpi.value_field.text.attributes.visible = False
     fpi.attributes.not_in_schematic = True
     fpi.attributes.exclude_from_bill_of_materials = True
     fpi.attributes.exclude_from_position_files = True
@@ -60,19 +56,17 @@ if __name__=='__main__':
     offset = 0
     layer_idx = 1
     for copper_layer in copper_layers:
-        f = Text()
-        f.layer = copper_layer.layer.id
-        f.text = "%d" % layer_idx
-        f.locked = True
-        f.position = Vector2.from_xy(offset, 0)
-        f.attributes = defaults.text
-        f.attributes.visible = True
-        fmsg = Any()
-        fmsg.Pack(f.proto)
-        fp.items.append(fmsg)
+        layer_text = Text()
+        layer_text.layer = copper_layer.layer.id
+        layer_text.text = "%d" % layer_idx
+        layer_text.locked = True
+        layer_text.position = Vector2.from_xy(offset, 0)
+        layer_text.attributes = defaults.text
+        layer_text.attributes.visible = True
+        fp.add_item(layer_text)
 
         padding = 1 if layer_idx == 9 else 0.5
-        item_width = int((len(f.text) + padding) * char_width)
+        item_width = int((len(layer_text.text) + padding) * char_width)
 
         offset += item_width
         layer_idx += 1
@@ -80,6 +74,4 @@ if __name__=='__main__':
     created = board.create_items(fpi)
 
     if len(created) == 1:
-        created_fp = FootprintInstance()
-        created[0].item.Unpack(created_fp)
-        board.interactive_move(created_fp.id)
+        board.interactive_move(created[0].id)

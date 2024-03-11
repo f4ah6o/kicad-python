@@ -17,13 +17,14 @@
 
 from typing import List, Dict, Union, Iterable
 from google.protobuf.message import Message
+from google.protobuf.any_pb2 import Any
 from google.protobuf.empty_pb2 import Empty
 
-from kipy.board_types import Text
+import kipy.board_types
 from kipy.client import KiCadClient
 from kipy.common_types import TextAttributes
 from kipy.geometry import Box2
-from kipy.util import pack_any
+from kipy.util import pack_any, unpack_any
 from kipy.wrapper import Wrapper
 
 from kipy.proto.common.types import DocumentSpecifier, KIID
@@ -42,14 +43,15 @@ from kipy.proto.board.board_pb2 import (    # noqa
 
 
 _proto_to_object = {
-    board_types_pb2.Text: Text
+    board_types_pb2.Text: kipy.board_types.Text,
+    board_types_pb2.FootprintInstance: kipy.board_types.FootprintInstance
 }
 
-def _unwrap(message: Message):
-    wrapper = _proto_to_object.get(type(message), None)
-    if wrapper is not None:
-        return wrapper(message)
-    return message
+def _unwrap(message: Any) -> Union[Message, Wrapper]:
+    concrete = unpack_any(message)
+    wrapper = _proto_to_object.get(type(concrete), None)
+    assert(wrapper is not None)
+    return wrapper(concrete)
 
 class BoardLayerGraphicsDefaults(Wrapper):
     """Wraps a kiapi.board.types.BoardLayerGraphicsDefaults object"""
@@ -69,16 +71,16 @@ class Board:
         """Returns the file name of the board"""
         return self._doc.board_filename
     
-    def create_items(self, items: Union[Message, Iterable[Message]]) -> List[Message]:
+    def create_items(self, items: Union[Wrapper, Iterable[Wrapper]]) -> List[Wrapper]:
         command = CreateItems()
 
-        if isinstance(items, Message):
-            command.items.append(pack_any(items))
+        if isinstance(items, Wrapper):
+            command.items.append(pack_any(items.proto))
         else:
-            command.items.extend([pack_any(i) for i in items])
+            command.items.extend([pack_any(i.proto) for i in items])
 
         command.header.document.CopyFrom(self._doc)
-        return self._kicad.send(command, CreateItemsResponse).created_items
+        return [_unwrap(result.item) for result in self._kicad.send(command, CreateItemsResponse).created_items]
             
     def get_stackup(self) -> board_pb2.BoardStackup:
         command = board_commands_pb2.GetBoardStackup()
@@ -98,7 +100,7 @@ class Board:
             board_pb2.BoardLayerClass.BLC_OTHER:       BoardLayerGraphicsDefaults(reply.defaults.layers[5])
         }
     
-    def get_text_extents(self, text: Text) -> Box2:
+    def get_text_extents(self, text: kipy.board_types.Text) -> Box2:
         cmd = board_commands_pb2.GetTextExtents()
         cmd.text.CopyFrom(text.proto)
         reply = self._kicad.send(cmd, BoundingBoxResponse)

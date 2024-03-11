@@ -16,7 +16,6 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from kipy.proto.common import types
-from kipy.geometry import Vector2
 from kipy.wrapper import Wrapper
 
 class TextAttributes(Wrapper):
