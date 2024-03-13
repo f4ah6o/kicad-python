@@ -67,7 +67,12 @@ class Board:
         self._kicad = kicad
         self._doc = document
 
-    def get_name(self) -> str:
+    @property
+    def document(self) -> DocumentSpecifier:
+        return self._doc
+
+    @property
+    def name(self) -> str:
         """Returns the file name of the board"""
         return self._doc.board_filename
     
