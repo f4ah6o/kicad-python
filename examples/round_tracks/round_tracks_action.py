@@ -25,8 +25,16 @@ import wx
 import time
 
 from kipy import KiCad
+from kipy.util import from_mm
 
-from round_tracks_utils import *
+from round_tracks_utils import (
+    getTrackAngle,
+    getTrackAngleDifference,
+    reverseTrack,
+    shortenTrack,
+    similarPoints,
+    withinPad
+)
 from ui.round_tracks_gui import RoundTracksDialog
 
 RADIUS_DEFAULT = 2.0
@@ -90,10 +98,19 @@ class RoundTracks(RoundTracksDialog):
         for classname in classes:
             if classes[classname]['do_round']:
                 if self.use_native.IsChecked():
-                    self.addIntermediateTracks(scaling = classes[classname]['scaling'], netclass = classname, native = True, onlySelection = anySelected, avoid_junctions = avoid)
+                    self.addIntermediateTracks(scaling = classes[classname]['scaling'],
+                                               netclass = classname,
+                                               native = True,
+                                               onlySelection = anySelected,
+                                               avoid_junctions = avoid)
                 else:
                     for i in range(classes[classname]['passes']):
-                        self.addIntermediateTracks(scaling = classes[classname]['scaling'], netclass = classname, native = False, onlySelection = anySelected, avoid_junctions = avoid, msg=f", pass {i+1}")
+                        self.addIntermediateTracks(scaling = classes[classname]['scaling'],
+                                                   netclass = classname,
+                                                   native = False,
+                                                   onlySelection = anySelected,
+                                                   avoid_junctions = avoid,
+                                                   msg=f", pass {i+1}")
 
         # Track selection apparently de-syncs if we've modified it
         if anySelected:
@@ -150,8 +167,13 @@ class RoundTracks(RoundTracksDialog):
         try:
             with open(self.configfilepath, "w") as configfile:
                 for classname in classes:
-                    configfile.write('%s\t%s\t%s\t%s\n' % (classname, str(classes[classname]['do_round']), str(classes[classname]['scaling']), str(classes[classname]['passes'])))
-                configfile.write('%s\t%s\t%s\n' % (str(self.config['checkboxes']['new_file']), str(self.config['checkboxes']['native']), str(self.config['checkboxes']['avoid_junctions'])))
+                    configfile.write('%s\t%s\t%s\t%s\n' % (classname,
+                                                           str(classes[classname]['do_round']),
+                                                           str(classes[classname]['scaling']),
+                                                           str(classes[classname]['passes'])))
+                configfile.write('%s\t%s\t%s\n' % (str(self.config['checkboxes']['new_file']),
+                                                   str(self.config['checkboxes']['native']),
+                                                   str(self.config['checkboxes']['avoid_junctions'])))
         except PermissionError:
             pass
 
@@ -181,12 +203,17 @@ class RoundTracks(RoundTracksDialog):
                 'passes' : int(self.netclasslist.GetTextValue(i, 3))
             }
         self.config['classes'] = new_config
-        self.config['checkboxes'] = {'new_file':self.do_create.IsChecked(), 'native':self.use_native.IsChecked(), 'avoid_junctions':self.avoid_junctions.IsChecked()}
+        self.config['checkboxes'] = {
+            'new_file':self.do_create.IsChecked(),
+            'native':self.use_native.IsChecked(),
+            'avoid_junctions':self.avoid_junctions.IsChecked()
+            }
 
-    def addIntermediateTracks( self, scaling = RADIUS_DEFAULT, netclass = None, native = False, onlySelection = False, avoid_junctions = False, msg=""):
+    def addIntermediateTracks(self, scaling = RADIUS_DEFAULT, netclass = None, native = False,
+                              onlySelection = False, avoid_junctions = False, msg=""):
 
         # A 90 degree bend will get a maximum radius of this amount
-        RADIUS = pcbnew.FromMM(scaling /(math.sin( math.pi/4 )+1))
+        RADIUS = from_mm(scaling /(math.sin( math.pi/4 )+1))
 
         board = self.board
         netcodes = board.GetNetsByNetcode()
