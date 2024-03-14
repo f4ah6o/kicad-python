@@ -25,6 +25,8 @@ import wx
 import time
 
 from kipy import KiCad
+from kipy.enums import PCB_LAYER_ID
+from kipy.board_types import Arc, Track
 from kipy.util import from_mm
 
 from round_tracks_utils import (
@@ -123,8 +125,8 @@ class RoundTracks(RoundTracksDialog):
             self.board.SetFileName(new_name)
 
         anySelected = False
-        for t in self.board.GetTracks():
-            if t.IsSelected():
+        for item in self.board.get_selection():
+            if type(item) == Track:
                 anySelected = True
                 break
 
@@ -161,8 +163,7 @@ class RoundTracks(RoundTracksDialog):
         # even zone.SetNeedRefill(False) doesn't prevent it running twice
         self.prog.Pulse("Rebuilding zones...")
         wx.Yield()
-        filler = pcbnew.ZONE_FILLER(self.board)
-        filler.Fill(self.board.Zones())
+        self.board.refill_zones()
 
         if bool(self.prog):
             self.prog.Destroy()
@@ -273,21 +274,23 @@ class RoundTracks(RoundTracksDialog):
         RADIUS = from_mm(scaling / (math.sin(math.pi / 4) + 1))
 
         board = self.board
-        netcodes = board.GetNetsByNetcode()
-        allTracks = board.GetTracks()
-        allPads = board.GetPads()
+        allTracks = board.get_tracks()
+        allVias = board.get_vias()
+        allPads = board.get_pads()
+        selected = board.get_selection()
+        nets = board.get_nets()
 
         tracksToRemove = []
 
-        for netcode, net in netcodes.items():
+        for net in nets:
             if netclass is not None and netclass == net.GetNetClassName():
                 # BOARD::TracksInNet casts everything to a PCB_TRACK, even PCB_VIA and PCB_ARC
                 # tracksInNet = board.TracksInNet(net.GetNetCode())
                 tracksInNet = []
                 viasInNet = []
                 for t in allTracks:
-                    if t.GetNetCode() == netcode and (
-                        not onlySelection or t.IsSelected()
+                    if t.net == net and (
+                        not onlySelection or t in selected
                     ):
                         if t.GetClass() == "PCB_VIA":
                             viasInNet.append(t)
@@ -297,7 +300,7 @@ class RoundTracks(RoundTracksDialog):
                 tracksPerLayer = {}
                 # separate track by layer
                 for t in tracksInNet:
-                    layer = t.GetLayer()
+                    layer = t.layer
                     if layer not in tracksPerLayer:
                         tracksPerLayer[layer] = []
                     tracksPerLayer[layer].append(t)
@@ -319,9 +322,7 @@ class RoundTracks(RoundTracksDialog):
                 BCuPadsInNet = []
 
                 for p in allPads:
-                    if p.GetNetCode() == netcode and (
-                        not onlySelection or t.IsSelected()
-                    ):
+                    if p.net == net and (not onlySelection or t in selected):
                         attr = p.GetAttribute()
                         if (
                             attr == pcbnew.PAD_ATTRIB_NPTH
@@ -358,12 +359,11 @@ class RoundTracks(RoundTracksDialog):
                     trackLengths = {}
                     for ip in intersections:
                         (newX, newY) = ip
-                        intersection = pcbnew.VECTOR2I(newX, newY)
                         tracksHere = []
                         for t1 in tracks:
-                            if similarPoints(t1.GetStart(), intersection):
+                            if similarPoints(t1.start, ip):
                                 tracksHere.append(t1)
-                            elif similarPoints(t1.GetEnd(), intersection):
+                            elif similarPoints(t1.end, ip):
                                 # flip track such that all tracks start at the IP
                                 reverseTrack(t1)
                                 tracksHere.append(t1)
@@ -382,18 +382,18 @@ class RoundTracks(RoundTracksDialog):
 
                         # If the intersection is within a pad, but none of the tracks end within the pad, skip
                         for p in padsInNet:
-                            if withinPad(p, intersection, tracksHere):
+                            if withinPad(p, ip, tracksHere):
                                 skip = True
                                 break
 
-                        if layer == 0:
+                        if layer == PCB_LAYER_ID.F_Cu:
                             for p in FCuPadsInNet:
-                                if withinPad(p, intersection, tracksHere):
+                                if withinPad(p, ip, tracksHere):
                                     skip = True
                                     break
-                        elif layer == 31:
+                        elif layer == PCB_LAYER_ID.B_Cu:
                             for p in BCuPadsInNet:
-                                if withinPad(p, intersection, tracksHere):
+                                if withinPad(p, ip, tracksHere):
                                     skip = True
                                     break
 
@@ -437,12 +437,9 @@ class RoundTracks(RoundTracksDialog):
                                     theta = math.pi / 2 - halfTrackAngle[t1]
                                     f = 1 / (2 * math.cos(theta) + 2)
 
-                                    sp = cloneVECTOR2I(tracksHere[t1].GetStart())
-                                    ep = cloneVECTOR2I(
-                                        tracksHere[
-                                            (t1 + 1) % len(tracksHere)
-                                        ].GetStart()
-                                    )
+                                    sp = tracksHere[t1].start
+                                    ep = tracksHere[(t1 + 1) % len(tracksHere)].start
+                    
                                     if halfTrackAngle[t1] > math.pi / 2 - 0.001:
                                         tracksToAdd.append(
                                             (
@@ -454,7 +451,7 @@ class RoundTracks(RoundTracksDialog):
                                             )
                                         )
                                     else:
-                                        mp = pcbnew.VECTOR2I(
+                                        mp = (
                                             int(
                                                 newX * (1 - f * 2) + sp.x * f + ep.x * f
                                             ),
@@ -494,12 +491,8 @@ class RoundTracks(RoundTracksDialog):
                             for t1 in range(len(tracksHere)):
                                 # dont add 2 new tracks in the 2 track case
                                 if not (len(tracksHere) == 2 and t1 == 1):
-                                    newPoint1 = cloneVECTOR2I(tracksHere[t1].GetStart())
-                                    newPoint2 = cloneVECTOR2I(
-                                        tracksHere[
-                                            (t1 + 1) % len(tracksHere)
-                                        ].GetStart()
-                                    )
+                                    newPoint1 = tracksHere[t1].start
+                                    newPoint2 = tracksHere[(t1 + 1) % len(tracksHere)].start
                                     tracksToAdd.append(
                                         (
                                             newPoint1,
@@ -514,20 +507,20 @@ class RoundTracks(RoundTracksDialog):
                     for trackpoints in tracksToAdd:
                         (sp, ep, width, layer, net) = trackpoints
 
-                        track = pcbnew.PCB_TRACK(board)
-                        track.SetStart(sp)
-                        track.SetEnd(ep)
-                        track.SetWidth(width)
-                        track.SetLayer(layer)
-                        board.Add(track)
-                        track.SetNetCode(net)
+                        track = Track()
+                        track.start = sp
+                        track.end = ep
+                        track.width = width
+                        track.layer = layer
+                        track.net = net
+                        created_track = board.create_items(track)[0]
                         if onlySelection:
-                            track.SetSelected()
+                            board.add_to_selection(created_track)
 
                     for trackpoints in arcsToAdd:
                         (sp, ep, mp, width, layer, net) = trackpoints
 
-                        arc = pcbnew.PCB_ARC(board)
+                        arc = Arc()
                         arc.SetStart(sp)
                         arc.SetMid(mp)
                         arc.SetEnd(ep)
@@ -539,7 +532,7 @@ class RoundTracks(RoundTracksDialog):
                             arc.SetSelected()
 
             self.prog.Pulse(
-                f"Netclass: {netclass}, {netcode+1} of {len(netcodes)}{msg}"
+                f"Netclass: {netclass}, {net.code+1} of {len(nets)}{msg}"
             )
 
         for t in tracksToRemove:

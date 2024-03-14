@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List
+from typing import List, Union
 from google.protobuf.any_pb2 import Any
 
 from kipy.enums import PCB_LAYER_ID
@@ -24,6 +24,28 @@ from kipy.proto.board import board_types_pb2
 from kipy.common_types import TextAttributes
 from kipy.geometry import Vector2
 from kipy.wrapper import Wrapper
+
+class Net(Wrapper):
+    def __init__(self, proto: board_types_pb2.Net = board_types_pb2.Net()):
+        self._proto = proto
+
+class Track(Wrapper):
+    """Represents a straight track segment"""
+    def __init__(self, proto: board_types_pb2.Track):
+        self._proto = proto
+
+class Arc(Wrapper):
+    """Represents an arc track segment"""
+    def __init__(self, proto: board_types_pb2.Arc):
+        self._proto = proto
+
+class Via(Wrapper):
+    def __init__(self, proto: board_types_pb2.Via):
+        self._proto = proto
+
+class Pad(Wrapper):
+    def __init__(self, proto: board_types_pb2.Pad):
+        self._proto = proto
 
 class Text(Wrapper):
     """Represents a free text object, or the text component of a field"""

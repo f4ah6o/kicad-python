@@ -20,9 +20,18 @@ from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
 from google.protobuf.empty_pb2 import Empty
 
-import kipy.board_types
+from kipy.board_types import (
+    Arc,
+    FootprintInstance,
+    Net,
+    Pad,
+    Text,
+    Track,
+    Via,
+)
 from kipy.client import KiCadClient
 from kipy.common_types import TextAttributes
+from kipy.enums import KICAD_T
 from kipy.geometry import Box2
 from kipy.util import pack_any, unpack_any
 from kipy.wrapper import Wrapper
@@ -41,10 +50,14 @@ from kipy.proto.board.board_pb2 import (    # noqa
     BoardLayerClass 
 )
 
-
 _proto_to_object = {
-    board_types_pb2.Text: kipy.board_types.Text,
-    board_types_pb2.FootprintInstance: kipy.board_types.FootprintInstance
+    board_types_pb2.Arc: Arc,
+    board_types_pb2.FootprintInstance: FootprintInstance,
+    board_types_pb2.Net: Net,
+    board_types_pb2.Pad: Pad,
+    board_types_pb2.Text: Text,
+    board_types_pb2.Track: Track,
+    board_types_pb2.Via: Via,
 }
 
 def _unwrap(message: Any) -> Union[Message, Wrapper]:
@@ -86,7 +99,35 @@ class Board:
 
         command.header.document.CopyFrom(self._doc)
         return [_unwrap(result.item) for result in self._kicad.send(command, CreateItemsResponse).created_items]
-            
+
+    def get_items(self, type_filter: Union[KICAD_T, List[KICAD_T]]) -> List[Wrapper]:
+        # return [_unwrap(result.item) for result in cmd]
+        pass
+
+    def get_tracks(self) -> List[Track]:
+        return self.get_items(type_filter=[KICAD_T.PCB_TRACE_T, KICAD_T.PCB_ARC_T])
+    
+    def get_vias(self) -> List[Via]:
+        return self.get_items(type_filter=[KICAD_T.PCB_VIA_T])
+    
+    def get_pads(self) -> List[Pad]:
+        return self.get_items(type_filter=[KICAD_T.PCB_PAD_T])
+
+    def get_nets(self) -> List[Net]:
+        pass
+
+    def get_selection(self):
+        pass
+
+    def add_to_selection(self, items):
+        pass
+
+    def remove_from_selection(self, items):
+        pass
+
+    def clear_selection(self):
+        pass
+
     def get_stackup(self) -> board_pb2.BoardStackup:
         command = board_commands_pb2.GetBoardStackup()
         command.board.CopyFrom(self._doc)
@@ -105,7 +146,7 @@ class Board:
             board_pb2.BoardLayerClass.BLC_OTHER:       BoardLayerGraphicsDefaults(reply.defaults.layers[5])
         }
     
-    def get_text_extents(self, text: kipy.board_types.Text) -> Box2:
+    def get_text_extents(self, text: Text) -> Box2:
         cmd = board_commands_pb2.GetTextExtents()
         cmd.text.CopyFrom(text.proto)
         reply = self._kicad.send(cmd, BoundingBoxResponse)
@@ -121,3 +162,6 @@ class Board:
             cmd.items.extend(items)
 
         self._kicad.send(cmd, Empty)
+
+    def refill_zones(self):
+        pass
