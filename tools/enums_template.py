@@ -17,8 +17,11 @@
 
 # THIS FILE WAS GENERATED AUTOMATICALLY - DO NOT EDIT
 
-{% for enum in enums %}class {{ enum['type'] }}:
+from enum import Enum, unique
+
+@unique
+{% for enum in enums %}class {{ enum['type'] }}(Enum):
     """KiCad's {{ enum.type }} enum type"""
     {% for entry in enum['values'] %}{{ entry['key'] }} = {{ entry['value'] }}
-    {% endfor %}
+    {% endfor %}        
 {% endfor %}

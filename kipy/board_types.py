@@ -15,14 +15,17 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List
+from typing import Dict, Sequence
+from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
 
 from kipy.enums import PCB_LAYER_ID
 from kipy.proto.common.types import KIID
+from kipy.proto.common.types.base_types_pb2 import LockedState
 from kipy.proto.board import board_types_pb2
 from kipy.common_types import TextAttributes
 from kipy.geometry import Vector2
+from kipy.util import unpack_any
 from kipy.wrapper import Wrapper
 
 # Re-exported protobuf enum types
@@ -53,8 +56,8 @@ class Pad(Wrapper):
         self._proto = proto
 
     @property
-    def pad_type(self) -> PadType:
-        return self._proto.type
+    def pad_type(self) -> PadType.ValueType:
+        return self._proto.pad_type
 
 class Text(Wrapper):
     """Represents a free text object, or the text component of a field"""
@@ -75,19 +78,22 @@ class Text(Wrapper):
 
     @property
     def layer(self) -> PCB_LAYER_ID:
-        return self._proto.text.layer.id
+        return PCB_LAYER_ID(self._proto.text.layer.id)
     
     @layer.setter
     def layer(self, layer: PCB_LAYER_ID):
-        self._proto.text.layer.id = layer
+        self._proto.text.layer.id = layer.value
 
     @property
     def locked(self) -> bool:
-        return self._proto.text.locked
+        return self._proto.text.locked == LockedState.LS_LOCKED
     
     @locked.setter
     def locked(self, locked: bool):
-        self._proto.text.locked = locked
+        self._proto.text.locked = {
+            True: LockedState.LS_LOCKED,
+            False: LockedState.LS_UNLOCKED,
+        }.get(locked, LockedState.LS_UNLOCKED)
 
     @property
     def text(self) -> str:
@@ -113,7 +119,7 @@ class Field(Wrapper):
 
     @property
     def id(self) -> int:
-        return self._proto.id
+        return self._proto.id.id
     
     @property
     def name(self) -> str:
@@ -163,8 +169,8 @@ class Footprint(Wrapper):
         self._proto = proto
 
     @property
-    def items(self) -> List:
-        return self._proto.items
+    def items(self) -> Sequence[Wrapper]:
+        return [unwrap(item) for item in self._proto.items]
     
     def add_item(self, item: Wrapper):
         any = Any()
@@ -195,3 +201,19 @@ class FootprintInstance(Wrapper):
     @property
     def attributes(self) -> FootprintAttributes:
         return FootprintAttributes(self._proto.attributes)
+    
+_proto_to_object: Dict[type[Message], type[Wrapper]] = {
+    board_types_pb2.Arc: Arc,
+    board_types_pb2.FootprintInstance: FootprintInstance,
+    board_types_pb2.Net: Net,
+    board_types_pb2.Pad: Pad,
+    board_types_pb2.Text: Text,
+    board_types_pb2.Track: Track,
+    board_types_pb2.Via: Via,
+}
+
+def unwrap(message: Any) -> Wrapper:
+    concrete = unpack_any(message)
+    wrapper = _proto_to_object.get(type(concrete), None)
+    assert(wrapper is not None)
+    return wrapper(concrete)

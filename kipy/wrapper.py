@@ -20,4 +20,4 @@ from abc import ABC
 class Wrapper(ABC):
     @property
     def proto(self):
-        return self._proto
+        return self.__dict__['_proto']

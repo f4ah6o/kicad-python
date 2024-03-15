@@ -18,6 +18,8 @@
 from google.protobuf.any_pb2 import Any
 from google.protobuf.message import Message
 
+from kipy.enums import KICAD_T
+from kipy.proto.common.types import ItemType
 from kipy.proto.board import board_types_pb2
 
 def pack_any(object: Message) -> Any:
@@ -43,10 +45,12 @@ _any_urls = {
 
 def unpack_any(object: Any) -> Message:
     type = _any_urls.get(object.type_url, None)
-    if type is None:
-        return None
+    assert(type is not None)
     concrete = type()
     object.Unpack(concrete)
     return concrete
     
-    
+def make_item_type(type: KICAD_T) -> ItemType:
+    t = ItemType()
+    t.type = type.value
+    return t

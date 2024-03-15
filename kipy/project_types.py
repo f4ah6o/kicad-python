@@ -24,5 +24,5 @@ class NetClass(Wrapper):
         self._proto = proto
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._proto.name

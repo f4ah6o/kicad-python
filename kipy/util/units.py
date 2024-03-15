@@ -15,17 +15,17 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-def from_mm(mm):
+def from_mm(value_mm: float) -> int:
     """
     KiCad uses several internal unit systems, but for the IPC API, all distance units are defined as
     64-bit nanometers
-    :param mm: a quantity in millimeters
+    :param value_mm: a quantity in millimeters
     :return: the quantity in KiCad API units
     """
-    return int(mm * 1_000_000)
+    return int(value_mm * 1_000_000)
 
-def to_mm(iu):
+def to_mm(value_nm: int) -> float:
     """
-    See from_mm
+    Converts a KiCad API length/distance value (in nanometers) to millimeters
     """
-    return float(iu) / 1_000_000
+    return float(value_nm) / 1_000_000

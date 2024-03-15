@@ -18,4 +18,4 @@
 # flake8: noqa
 
 from .units import from_mm, to_mm
-from .proto import pack_any, unpack_any
+from .proto import pack_any, unpack_any, make_item_type

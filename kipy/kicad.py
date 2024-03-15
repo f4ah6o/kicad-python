@@ -19,7 +19,7 @@ import os
 import platform
 import random
 import string
-from typing import List
+from typing import Sequence
 
 from kipy.board import Board
 from kipy.client import KiCadClient, ApiError
@@ -73,7 +73,7 @@ class KiCad:
         """
         return self._client.send(commands.RunAction(), commands.RunActionResponse)
     
-    def get_open_documents(self, doc_type: DocumentType) -> List[DocumentSpecifier]:
+    def get_open_documents(self, doc_type: DocumentType.ValueType) -> Sequence[DocumentSpecifier]:
         """Retrieves a list of open documents matching the given type"""
         command = commands.GetOpenDocuments()
         command.type = doc_type

@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List, Dict, Union, Iterable
-from google.protobuf.message import Message
-from google.protobuf.any_pb2 import Any
+from typing import List, Dict, Union, Iterable, Sequence, cast
 from google.protobuf.empty_pb2 import Empty
 
 from kipy.board_types import (
@@ -28,43 +26,28 @@ from kipy.board_types import (
     Text,
     Track,
     Via,
+    unwrap
 )
 from kipy.client import KiCadClient
 from kipy.common_types import TextAttributes
 from kipy.enums import KICAD_T
 from kipy.geometry import Box2
-from kipy.util import pack_any, unpack_any
+from kipy.util import pack_any, make_item_type
 from kipy.wrapper import Wrapper
 
 from kipy.proto.common.types import DocumentSpecifier, KIID
 from kipy.proto.common.commands.editor_commands_pb2 import (
     CreateItems, CreateItemsResponse,
+    GetItems, GetItemsResponse,
     BoundingBoxResponse
 )
 from kipy.proto.board import board_pb2
-from kipy.proto.board import board_types_pb2
 from kipy.proto.board import board_commands_pb2
 
 # Re-exported protobuf enum types
 from kipy.proto.board.board_pb2 import (    # noqa
     BoardLayerClass 
 )
-
-_proto_to_object = {
-    board_types_pb2.Arc: Arc,
-    board_types_pb2.FootprintInstance: FootprintInstance,
-    board_types_pb2.Net: Net,
-    board_types_pb2.Pad: Pad,
-    board_types_pb2.Text: Text,
-    board_types_pb2.Track: Track,
-    board_types_pb2.Via: Via,
-}
-
-def _unwrap(message: Any) -> Union[Message, Wrapper]:
-    concrete = unpack_any(message)
-    wrapper = _proto_to_object.get(type(concrete), None)
-    assert(wrapper is not None)
-    return wrapper(concrete)
 
 class BoardLayerGraphicsDefaults(Wrapper):
     """Wraps a kiapi.board.types.BoardLayerGraphicsDefaults object"""
@@ -91,29 +74,42 @@ class Board:
     
     def create_items(self, items: Union[Wrapper, Iterable[Wrapper]]) -> List[Wrapper]:
         command = CreateItems()
+        command.header.document.CopyFrom(self._doc)
 
         if isinstance(items, Wrapper):
             command.items.append(pack_any(items.proto))
         else:
             command.items.extend([pack_any(i.proto) for i in items])
 
+        return [unwrap(result.item) for result in self._kicad.send(command, CreateItemsResponse).created_items]
+
+    def get_items(self, type_filter: Union[KICAD_T, List[KICAD_T]]) -> Sequence[Wrapper]:
+        """Retrieves items from the board, optionally filtering to a single or set of types"""
+        command = GetItems()
         command.header.document.CopyFrom(self._doc)
-        return [_unwrap(result.item) for result in self._kicad.send(command, CreateItemsResponse).created_items]
 
-    def get_items(self, type_filter: Union[KICAD_T, List[KICAD_T]]) -> List[Wrapper]:
-        # return [_unwrap(result.item) for result in cmd]
-        pass
+        if isinstance(type_filter, KICAD_T):
+            command.types.add(type=type_filter)
+        else:
+            command.types.extend([make_item_type(t) for t in type_filter])
 
-    def get_tracks(self) -> List[Track]:
-        return self.get_items(type_filter=[KICAD_T.PCB_TRACE_T, KICAD_T.PCB_ARC_T])
+        return [unwrap(item) for item in self._kicad.send(command, GetItemsResponse).items]
+
+    def get_tracks(self) -> Sequence[Union[Track, Arc]]:
+        return [
+            cast(Track, item) if isinstance(item, Track) else cast(Arc, item)
+            for item in self.get_items(
+                type_filter=[KICAD_T.PCB_TRACE_T, KICAD_T.PCB_ARC_T]
+            )
+        ]
+
+    def get_vias(self) -> Sequence[Via]:
+        return [cast(Via, item) for item in self.get_items(type_filter=[KICAD_T.PCB_VIA_T])]
     
-    def get_vias(self) -> List[Via]:
-        return self.get_items(type_filter=[KICAD_T.PCB_VIA_T])
-    
-    def get_pads(self) -> List[Pad]:
-        return self.get_items(type_filter=[KICAD_T.PCB_PAD_T])
+    def get_pads(self) -> Sequence[Pad]:
+        return [cast(Pad, item) for item in self.get_items(type_filter=[KICAD_T.PCB_PAD_T])]
 
-    def get_nets(self) -> List[Net]:
+    def get_nets(self):
         pass
 
     def get_selection(self):

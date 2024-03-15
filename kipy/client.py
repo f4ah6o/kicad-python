@@ -16,6 +16,7 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import pynng
+from typing import TypeVar, cast
 
 from google.protobuf.message import Message
 
@@ -34,7 +35,9 @@ class KiCadClient:
     def _connect(self):
         self._conn = pynng.Req0(dial=self._socket_path, send_timeout=1000, recv_timeout=1000)
 
-    def send(self, command: Message, response_type: Message) -> Message:
+    R = TypeVar('R')
+
+    def send(self, command: Message, response_type: type[R]) -> R:
         envelope = ApiRequest()
         envelope.message.Pack(command)
         envelope.header.kicad_token = self._kicad_token
@@ -58,6 +61,6 @@ class KiCadClient:
             if self._kicad_token == "":
                 self._kicad_token = reply.header.kicad_token
 
-            return response
+            return cast(response_type, response)
         else:
             raise ApiError("KiCad returned error: {}".format(reply.status.error_message))

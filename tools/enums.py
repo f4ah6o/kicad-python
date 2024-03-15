@@ -19,15 +19,15 @@ import argparse
 from jinja2 import Template
 import json
 
-def generate_enums(input: str, output: str, template: str):
+def generate_enums(input: str, output: str, template_path: str):
     with open(input, 'r') as f:
         enums = json.load(f)
 
-    with open(template) as f:
+    with open(template_path) as f:
         template = Template(f.read())
 
-    with open(output, 'w') as f:
-        f.write(template.render(enums=enums))
+        with open(output, 'w') as f:
+            f.write(template.render(enums=enums))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
