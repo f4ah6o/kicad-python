@@ -27,6 +27,7 @@ import time
 from kipy import KiCad
 from kipy.enums import PCB_LAYER_ID
 from kipy.board_types import Arc, Track, PadType
+from kipy.geometry import Vector2
 from kipy.util import from_mm
 
 from round_tracks_utils import (
@@ -324,14 +325,16 @@ class RoundTracks(RoundTracksDialog):
                     for t2 in range(t1 + 1, len(tracks)):
                         # check if these two tracks share an endpoint
                         # reduce it to a 2-part tuple so there are not multiple objects of the same point in the set
-                        if tracks[t1].IsPointOnEnds(tracks[t2].GetStart()):
-                            intersections.add(
-                                (tracks[t2].GetStart().x, tracks[t2].GetStart().y)
-                            )
-                        if tracks[t1].IsPointOnEnds(tracks[t2].GetEnd()):
-                            intersections.add(
-                                (tracks[t2].GetEnd().x, tracks[t2].GetEnd().y)
-                            )
+                        if (
+                            tracks[t1].start == tracks[t2].start
+                            or tracks[t1].end == tracks[t2].start
+                        ):
+                            intersections.add((tracks[t2].start.x, tracks[t2].start.y))
+                        if (
+                            tracks[t1].start == tracks[t2].end
+                            or tracks[t1].end == tracks[t2].end
+                        ):
+                            intersections.add((tracks[t2].end.x, tracks[t2].end.y))
 
                 # for each remaining intersection, shorten each track by the same amount, and place a track between.
                 tracksToAdd = []
@@ -341,9 +344,9 @@ class RoundTracks(RoundTracksDialog):
                     (newX, newY) = ip
                     tracksHere = []
                     for t1 in tracks:
-                        if similarPoints(t1.start, ip):
+                        if similarPoints(t1.start, Vector2.from_xy(newX, newY)):
                             tracksHere.append(t1)
-                        elif similarPoints(t1.end, ip):
+                        elif similarPoints(t1.end, Vector2.from_xy(newX, newY)):
                             # flip track such that all tracks start at the IP
                             reverseTrack(t1)
                             tracksHere.append(t1)
@@ -356,7 +359,7 @@ class RoundTracks(RoundTracksDialog):
                     # if there are any arcs or vias present, skip the intersection entirely
                     skip = False
                     for t1 in tracksHere:
-                        if t1.GetClass() != "PCB_TRACK":
+                        if type(t1) == Arc:
                             skip = True
                             break
 
@@ -383,7 +386,7 @@ class RoundTracks(RoundTracksDialog):
                     shortest = -1
                     for t1 in tracksHere:
                         if id(t1) not in trackLengths:
-                            trackLengths[id(t1)] = t1.GetLength()
+                            trackLengths[id(t1)] = t1.length()
                         if (
                             shortest == -1
                             or trackLengths[id(t1)] < trackLengths[id(shortest)]
@@ -425,28 +428,24 @@ class RoundTracks(RoundTracksDialog):
                                         (
                                             sp,
                                             ep,
-                                            tracksHere[t1].GetWidth(),
-                                            tracksHere[t1].GetLayer(),
-                                            tracksHere[t1].GetNetCode(),
+                                            tracksHere[t1].width,
+                                            tracksHere[t1].layer,
+                                            tracksHere[t1].net,
                                         )
                                     )
                                 else:
-                                    mp = (
-                                        int(
-                                            newX * (1 - f * 2) + sp.x * f + ep.x * f
-                                        ),
-                                        int(
-                                            newY * (1 - f * 2) + sp.y * f + ep.y * f
-                                        ),
+                                    mp = Vector2.from_xy(
+                                        int(newX * (1 - f * 2) + sp.x * f + ep.x * f),
+                                        int(newY * (1 - f * 2) + sp.y * f + ep.y * f),
                                     )
                                     arcsToAdd.append(
                                         (
                                             sp,
                                             ep,
                                             mp,
-                                            tracksHere[t1].GetWidth(),
-                                            tracksHere[t1].GetLayer(),
-                                            tracksHere[t1].GetNetCode(),
+                                            tracksHere[t1].width,
+                                            tracksHere[t1].layer,
+                                            tracksHere[t1].net,
                                         )
                                     )
 
@@ -477,9 +476,9 @@ class RoundTracks(RoundTracksDialog):
                                     (
                                         newPoint1,
                                         newPoint2,
-                                        tracksHere[t1].GetWidth(),
-                                        tracksHere[t1].GetLayer(),
-                                        tracksHere[t1].GetNetCode(),
+                                        tracksHere[t1].width,
+                                        tracksHere[t1].layer,
+                                        tracksHere[t1].net,
                                     )
                                 )
 
@@ -501,11 +500,11 @@ class RoundTracks(RoundTracksDialog):
                     (sp, ep, mp, width, layer, net) = trackpoints
 
                     arc = Arc()
-                    arc.SetStart(sp)
-                    arc.SetMid(mp)
-                    arc.SetEnd(ep)
-                    arc.SetWidth(width)
-                    arc.SetLayer(layer)
+                    arc.start = sp
+                    arc.mid = mp
+                    arc.end = ep
+                    arc.width = width
+                    arc.layer = layer
                     arc.net = net
                     created_arc = board.create_items(arc)[0]
                     if onlySelection:

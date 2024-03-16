@@ -44,6 +44,11 @@ class Net(Wrapper):
     @property
     def code(self) -> int:
         return self._proto.code.value
+    
+    def __eq__(self, other):
+        if isinstance(other, Net):
+            return self.name == other.name and self.code == other.code
+        return NotImplemented
 
 class Track(Wrapper):
     """Represents a straight track segment"""
@@ -66,6 +71,34 @@ class Track(Wrapper):
     def layer(self, layer: PCB_LAYER_ID):
         self._proto.layer.id = layer.value
 
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.start)
+    
+    @start.setter
+    def start(self, point: Vector2):
+        self._proto.start.CopyFrom(point.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.end)
+    
+    @end.setter
+    def end(self, point: Vector2):
+        self._proto.end.CopyFrom(point.proto)
+
+    @property
+    def width(self) -> int:
+        return self._proto.width.value_nm
+    
+    @width.setter
+    def width(self, width: int):
+        self._proto.width.value_nm = width
+
+    def length(self) -> float:
+        """Calculates track length in nanometers"""
+        return (self.end - self.start).length()
+
 class Arc(Wrapper):
     """Represents an arc track segment"""
     def __init__(self, proto: board_types_pb2.Arc = board_types_pb2.Arc()):
@@ -86,6 +119,38 @@ class Arc(Wrapper):
     @layer.setter
     def layer(self, layer: PCB_LAYER_ID):
         self._proto.layer.id = layer.value
+
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.start)
+    
+    @start.setter
+    def start(self, point: Vector2):
+        self._proto.start.CopyFrom(point.proto)
+
+    @property
+    def mid(self) -> Vector2:
+        return Vector2(self._proto.mid)
+    
+    @mid.setter
+    def mid(self, point: Vector2):
+        self._proto.mid.CopyFrom(point.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.end)
+    
+    @end.setter
+    def end(self, point: Vector2):
+        self._proto.end.CopyFrom(point.proto)
+
+    @property
+    def width(self) -> int:
+        return self._proto.width.value_nm
+    
+    @width.setter
+    def width(self, width: int):
+        self._proto.width.value_nm = width
 
 class Via(Wrapper):
     def __init__(self, proto: board_types_pb2.Via = board_types_pb2.Via()):
@@ -113,7 +178,7 @@ class Pad(Wrapper):
 
     @property
     def pad_type(self) -> PadType.ValueType:
-        return self._proto.pad_type
+        return self._proto.type
 
 class Text(Wrapper):
     """Represents a free text object, or the text component of a field"""

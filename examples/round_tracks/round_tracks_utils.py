@@ -1,19 +1,20 @@
 import math
 from math import pi
+from typing import Union
+from kipy.geometry import Vector2
+from kipy.board_types import Track, Arc
 
 tolerance = 10  # in nanometres
 
 
-def reverseTrack(t1):
-    # flip the track
-    sp = cloneVECTOR2I(t1.GetStart())
-    ep = cloneVECTOR2I(t1.GetEnd())
-    t1.SetStart(ep)
-    t1.SetEnd(sp)
+def reverseTrack(track: Union[Track, Arc]):
+    ep = track.start
+    track.start = track.end
+    track.end = ep
 
 
 # determines whether 2 points are close enough to be considered identical
-def similarPoints(p1, p2):
+def similarPoints(p1: Vector2, p2: Vector2):
     return ((p1.x > p2.x - tolerance) and (p1.x < p2.x + tolerance)) and (
         (p1.y > p2.y - tolerance) and (p1.y < p2.y + tolerance)
     )
@@ -36,17 +37,17 @@ def withinPad(pad, a, tracks):
 
 
 # shortens a track by an arbitrary amount, maintaining the angle and the endpoint
-def shortenTrack(t1, amountToShorten):
+def shortenTrack(t1: Track, amountToShorten):
     # return true if amount to shorten exceeds length
 
-    if amountToShorten + tolerance >= t1.GetLength():
-        t1.SetStart(cloneVECTOR2I(t1.GetEnd()))
+    if amountToShorten + tolerance >= t1.length():
+        t1.start = t1.end
         return True
 
     angle = normalizeAngle(getTrackAngle(t1))
-    newX = t1.GetStart().x + math.cos(angle) * amountToShorten
-    newY = t1.GetStart().y + math.sin(angle) * amountToShorten
-    t1.SetStart(pcbnew.VECTOR2I(int(newX), int(newY)))
+    newX = t1.start.x + math.cos(angle) * amountToShorten
+    newY = t1.start.y + math.sin(angle) * amountToShorten
+    t1.start = Vector2.from_xy(int(newX), int(newY))
     return False
 
 
@@ -61,17 +62,15 @@ def normalizeAngle(inputAngle):
 
 
 # gets the angle of a track (unnormalized)
-def getTrackAngle(t1):
+def getTrackAngle(t1: Track):
     # use atan2 so the correct quadrant is returned
-    return math.atan2(
-        (t1.GetEnd().y - t1.GetStart().y), (t1.GetEnd().x - t1.GetStart().x)
-    )
+    return math.atan2((t1.end.y - t1.start.y), (t1.end.x - t1.start.x))
 
 
 # Get angle between tracks, assumes both start at their intersection
-def getTrackAngleDifference(t1, t2):
-    a1 = math.atan2(t1.GetEnd().y - t1.GetStart().y, t1.GetEnd().x - t1.GetStart().x)
-    a2 = math.atan2(t2.GetEnd().y - t2.GetStart().y, t2.GetEnd().x - t2.GetStart().x)
+def getTrackAngleDifference(t1: Track, t2: Track):
+    a1 = math.atan2(t1.end.y - t1.start.y, t1.end.x - t1.start.x)
+    a2 = math.atan2(t2.end.y - t2.start.y, t2.end.x - t2.start.x)
     t = a1 - a2
     if t > pi:
         t = 2 * pi - t

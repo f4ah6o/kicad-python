@@ -131,7 +131,18 @@ class Board:
         pass
 
     def get_nets(self, netclass_filter: Union[str, Sequence[str], None]) -> Sequence[Net]:
-        return []
+        command = board_commands_pb2.GetNets()
+        command.board.CopyFrom(self._doc)
+
+        if isinstance(netclass_filter, str):
+            command.netclass_filter.append(netclass_filter)
+        elif netclass_filter is not None:
+            command.netclass_filter.extend(netclass_filter)
+
+        return [
+            Net(net)
+            for net in self._kicad.send(command, board_commands_pb2.NetsResponse).nets
+        ]
 
     def get_selection(self) -> Sequence[Wrapper]:
         return []
