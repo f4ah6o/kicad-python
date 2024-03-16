@@ -16,7 +16,16 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from kipy.proto.common import types
+from kipy.proto.common.types.base_types_pb2 import KIID
 from kipy.wrapper import Wrapper
+
+class Commit:
+    def __init__(self, id: KIID):
+        self._id = id
+
+    @property
+    def id(self) -> KIID:
+        return self._id
 
 class TextAttributes(Wrapper):
     def __init__(self, proto: types.TextAttributes = types.TextAttributes()):

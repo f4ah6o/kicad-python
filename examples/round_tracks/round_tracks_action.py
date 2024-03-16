@@ -131,6 +131,8 @@ class RoundTracks(RoundTracksDialog):
                 anySelected = True
                 break
 
+        commit = self.board.begin_commit()
+
         avoid = self.avoid_junctions.IsChecked()
         classes = self.config["classes"]
         for classname in classes:
@@ -153,6 +155,8 @@ class RoundTracks(RoundTracksDialog):
                             avoid_junctions=avoid,
                             msg=f", pass {i+1}",
                         )
+
+        self.board.push_commit(commit, "Round Tracks")
 
         # if m_AutoRefillZones is set, we should skip here, but PCBNEW_SETTINGS is not exposed to swig
         # ZONE_FILLER has SetProgressReporter, but PROGRESS_REPORTER is also not available, so we can't use it

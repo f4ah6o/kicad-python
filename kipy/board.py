@@ -29,7 +29,7 @@ from kipy.board_types import (
     unwrap
 )
 from kipy.client import KiCadClient
-from kipy.common_types import TextAttributes
+from kipy.common_types import Commit, TextAttributes
 from kipy.enums import KICAD_T
 from kipy.geometry import Box2
 from kipy.util import pack_any, make_item_type
@@ -37,6 +37,8 @@ from kipy.wrapper import Wrapper
 
 from kipy.proto.common.types import DocumentSpecifier, KIID
 from kipy.proto.common.commands.editor_commands_pb2 import (
+    BeginCommit, BeginCommitResponse, CommitAction,
+    EndCommit, EndCommitResponse,
     CreateItems, CreateItemsResponse,
     GetItems, GetItemsResponse,
     BoundingBoxResponse
@@ -77,6 +79,23 @@ class Board:
 
     def save_as(self, filename: str):
         pass
+
+    def begin_commit(self) -> Commit:
+        command = BeginCommit()
+        return Commit(self._kicad.send(command, BeginCommitResponse).id)
+
+    def push_commit(self, commit: Commit, message: str = ""):
+        command = EndCommit()
+        command.id.CopyFrom(commit.id)
+        command.action = CommitAction.CMA_COMMIT
+        command.message = message
+        self._kicad.send(command, EndCommitResponse)
+
+    def drop_commit(self, commit: Commit):
+        command = EndCommit()
+        command.id.CopyFrom(commit.id)
+        command.action = CommitAction.CMA_DROP
+        self._kicad.send(command, EndCommitResponse)
     
     def create_items(self, items: Union[Wrapper, Iterable[Wrapper]]) -> List[Wrapper]:
         command = CreateItems()
