@@ -1,4 +1,5 @@
 import math
+from copy import deepcopy
 from math import pi
 from typing import Union
 from kipy.geometry import Vector2
@@ -8,7 +9,7 @@ tolerance = 10  # in nanometres
 
 
 def reverseTrack(track: Union[Track, Arc]):
-    ep = track.start
+    ep = deepcopy(track.start)
     track.start = track.end
     track.end = ep
 

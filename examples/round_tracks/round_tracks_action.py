@@ -23,6 +23,8 @@ import math
 import os
 import wx
 import time
+from copy import deepcopy
+from typing import Set
 
 from kipy import KiCad
 from kipy.enums import PCB_LAYER_ID
@@ -324,7 +326,7 @@ class RoundTracks(RoundTracksDialog):
                 tracks = tracksPerLayer[layer]
 
                 # add all the possible intersections to a unique set, for iterating over later
-                intersections = set()
+                intersections: Set[Vector2] = set()
                 for t1 in range(len(tracks)):
                     for t2 in range(t1 + 1, len(tracks)):
                         # check if these two tracks share an endpoint
@@ -333,12 +335,12 @@ class RoundTracks(RoundTracksDialog):
                             tracks[t1].start == tracks[t2].start
                             or tracks[t1].end == tracks[t2].start
                         ):
-                            intersections.add((tracks[t2].start.x, tracks[t2].start.y))
+                            intersections.add(deepcopy(tracks[t2].start))
                         if (
                             tracks[t1].start == tracks[t2].end
                             or tracks[t1].end == tracks[t2].end
                         ):
-                            intersections.add((tracks[t2].end.x, tracks[t2].end.y))
+                            intersections.add(deepcopy(tracks[t2].end))
 
                 # for each remaining intersection, shorten each track by the same amount, and place a track between.
                 tracksToAdd = []
@@ -346,12 +348,12 @@ class RoundTracks(RoundTracksDialog):
                 tracksModified = []
                 trackLengths = {}
                 for ip in intersections:
-                    (newX, newY) = ip
+                    (newX, newY) = (ip.x, ip.y)
                     tracksHere = []
                     for t1 in tracks:
-                        if similarPoints(t1.start, Vector2.from_xy(newX, newY)):
+                        if similarPoints(t1.start, ip):
                             tracksHere.append(t1)
-                        elif similarPoints(t1.end, Vector2.from_xy(newX, newY)):
+                        elif similarPoints(t1.end, ip):
                             # flip track such that all tracks start at the IP
                             reverseTrack(t1)
                             tracksHere.append(t1)

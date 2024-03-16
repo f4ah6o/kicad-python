@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import math
 from kipy.proto.common import types
 from kipy.wrapper import Wrapper
@@ -24,7 +25,7 @@ from kipy.wrapper import Wrapper
 class Vector2(Wrapper):
     """Wraps a kiapi.common.types.Vector2, aka VECTOR2I"""
     def __init__(self, proto: types.Vector2):
-        self._proto = proto
+        self._proto = deepcopy(proto)
 
     @classmethod
     def from_xy(cls, x_nm: int, y_nm: int):
@@ -50,6 +51,9 @@ class Vector2(Wrapper):
     def y(self, val: int):
         self._proto.y_nm = val
 
+    def __hash__(self):
+        return hash((self.x, self.y))
+
     def __eq__(self, other):
         if isinstance(other, Vector2):
             return self.x == other.x and self.y == other.y
@@ -61,15 +65,18 @@ class Vector2(Wrapper):
         r.y += other.y
         return r
     
+    def __sub__(self, other: Vector2) -> Vector2:
+        r = Vector2(self._proto)
+        r.x -= other.x
+        r.y -= other.y
+        return r
+    
     def __neg__(self) -> Vector2:
         r = Vector2(self._proto)
         r.x = -r.x
         r.y = -r.y
         return r
     
-    def __sub__(self, other: Vector2) -> Vector2:
-        return self + ( -other )
-
     def length(self) -> float:
         return math.sqrt(self.x * self.x + self.y * self.y)
 

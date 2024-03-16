@@ -44,8 +44,13 @@ _any_urls = {
 }
 
 def unpack_any(object: Any) -> Message:
+    if len(object.type_url) == 0:
+        raise ValueError("Can't unpack empty Any protobuf message")
+    
     type = _any_urls.get(object.type_url, None)
-    assert(type is not None)
+    if type is None:
+        raise NotImplementedError(f"{object.type_url} can't be unpacked")
+  
     concrete = type()
     object.Unpack(concrete)
     return concrete
