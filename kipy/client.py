@@ -33,7 +33,7 @@ class KiCadClient:
         self._connect()
 
     def _connect(self):
-        self._conn = pynng.Req0(dial=self._socket_path, send_timeout=1000, recv_timeout=1000)
+        self._conn = pynng.Req0(dial=self._socket_path, send_timeout=3000, recv_timeout=3000)
 
     R = TypeVar('R')
 

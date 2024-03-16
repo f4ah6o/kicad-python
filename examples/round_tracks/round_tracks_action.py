@@ -28,7 +28,7 @@ from typing import Set
 
 from kipy import KiCad
 from kipy.enums import PCB_LAYER_ID
-from kipy.board_types import Arc, Track, PadType
+from kipy.board_types import Arc, Track, PadType, Via
 from kipy.geometry import Vector2
 from kipy.util import from_mm
 
@@ -196,13 +196,13 @@ class RoundTracks(RoundTracksDialog):
                         new_config_line["scaling"] = float(params[2])
                         new_config_line["passes"] = int(params[3])
                         new_config[params[0]] = new_config_line
-                    except Exception as e:
+                    except Exception:
                         try:
                             new_config_line["new_file"] = params[0] == "True"
                             new_config_line["native"] = params[1] == "True"
                             new_config_line["avoid_junctions"] = params[2] == "True"
                             self.config["checkboxes"] = new_config_line
-                        except Exception as e:
+                        except Exception:
                             pass
         self.config["classes"] = new_config
 
@@ -241,7 +241,7 @@ class RoundTracks(RoundTracksDialog):
                         tested_val = float(self.netclasslist.GetTextValue(i, j))
                         if tested_val < 0:
                             self.netclasslist.SetTextValue(str(RADIUS_DEFAULT), i, j)
-                    except Exception as e:
+                    except Exception:
                         self.netclasslist.SetTextValue(str(RADIUS_DEFAULT), i, j)
                 if j == 3:
                     # param should be between int 1 and 5
@@ -249,7 +249,7 @@ class RoundTracks(RoundTracksDialog):
                         tested_val = int(self.netclasslist.GetTextValue(i, j))
                         if tested_val < 0 or tested_val > 5:
                             self.netclasslist.SetTextValue(str(PASSES_DEFAULT), i, j)
-                    except Exception as e:
+                    except Exception:
                         self.netclasslist.SetTextValue(str(PASSES_DEFAULT), i, j)
             new_config[self.netclasslist.GetTextValue(i, 0)] = {
                 "do_round": self.netclasslist.GetToggleValue(i, 1),
@@ -289,6 +289,7 @@ class RoundTracks(RoundTracksDialog):
             viasInNet = [v for v in allVias if v.net == net]
 
             tracksPerLayer = {}
+            viasPerLayer = {}
             # separate track by layer
             for t in tracksInNet:
                 layer = t.layer
@@ -299,10 +300,12 @@ class RoundTracks(RoundTracksDialog):
             for v in viasInNet:
                 # a buried/blind via will report only layers affected
                 # a through via will return all 32 possible layers
-                layerSet = v.GetLayerSet().CuStack()
+                layerSet = v.layer_set()
                 for layer in tracksPerLayer:
                     if layer in layerSet:
-                        tracksPerLayer[layer].append(v)
+                        if layer not in viasPerLayer:
+                            viasPerLayer[layer] = []
+                        viasPerLayer[layer].append(v)
 
             # TH pads cover all layers
             # SMD/CONN pads only touch F.Cu and B.Cu (layers 0 and 31)
@@ -317,13 +320,19 @@ class RoundTracks(RoundTracksDialog):
                     if p.pad_type in [PadType.PT_NPTH, PadType.PT_PTH]:
                         padsInNet.append(p)
                     else:
-                        if p.GetLayerSet().Contains(31):
+                        if PCB_LAYER_ID.B_Cu in p.layer_set():
                             BCuPadsInNet.append(p)
                         else:
                             FCuPadsInNet.append(p)
 
             for layer in tracksPerLayer:
                 tracks = tracksPerLayer[layer]
+
+                if layer in viasPerLayer:
+                    vias = viasPerLayer[layer]
+                    viaLocations = set([v.position for v in vias])
+                else:
+                    viaLocations = set()
 
                 # add all the possible intersections to a unique set, for iterating over later
                 intersections: Set[Vector2] = set()
@@ -367,7 +376,7 @@ class RoundTracks(RoundTracksDialog):
                     # if there are any arcs or vias present, skip the intersection entirely
                     skip = False
                     for t1 in tracksHere:
-                        if type(t1) == Arc:
+                        if type(t1) == Arc or ip in viaLocations:
                             skip = True
                             break
 

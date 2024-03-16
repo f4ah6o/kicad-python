@@ -23,6 +23,8 @@ def similarPoints(p1: Vector2, p2: Vector2):
 
 # test if an intersection is within the bounds of a pad
 def withinPad(pad, a, tracks):
+    # TODO
+    return False
     # Bounding box is probably sufficient, unless we had a giant L-shaped pad or something
     box = pad.GetBoundingBox()
     if not box.Contains(a):

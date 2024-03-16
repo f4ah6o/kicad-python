@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict, Sequence
+from typing import Dict, Sequence, Set
 from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
 
@@ -162,6 +162,14 @@ class Via(BoardItem):
         self._proto = proto
 
     @property
+    def position(self) -> Vector2:
+        return Vector2(self._proto.position)
+    
+    @position.setter
+    def position(self, position: Vector2):
+        self._proto.position.CopyFrom(position.proto)
+
+    @property
     def net(self) -> Net:
         return Net(self._proto.net)
     
@@ -169,9 +177,25 @@ class Via(BoardItem):
     def net(self, net: Net):
         self._proto.net.CopyFrom(net.proto)
 
+    def layer_set(self) -> Set[PCB_LAYER_ID]:
+        s = set()
+        layer = self._proto.pad_stack.start_layer.id
+        while layer <= self._proto.pad_stack.end_layer.id:
+            s.add(PCB_LAYER_ID(layer))
+            layer += 1
+        return s
+
 class Pad(BoardItem):
     def __init__(self, proto: board_types_pb2.Pad = board_types_pb2.Pad()):
         self._proto = proto
+
+    @property
+    def position(self) -> Vector2:
+        return Vector2(self._proto.position)
+    
+    @position.setter
+    def position(self, position: Vector2):
+        self._proto.position.CopyFrom(position.proto)
 
     @property
     def net(self) -> Net:
@@ -184,6 +208,14 @@ class Pad(BoardItem):
     @property
     def pad_type(self) -> PadType.ValueType:
         return self._proto.type
+
+    def layer_set(self) -> Set[PCB_LAYER_ID]:
+        s = set()
+        layer = self._proto.pad_stack.start_layer.id
+        while layer <= self._proto.pad_stack.end_layer.id:
+            s.add(PCB_LAYER_ID(layer))
+            layer += 1
+        return s
 
 class Text(BoardItem):
     """Represents a free text object, or the text component of a field"""
