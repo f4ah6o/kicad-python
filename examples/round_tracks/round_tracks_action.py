@@ -135,6 +135,11 @@ class RoundTracks(RoundTracksDialog):
 
         commit = self.board.begin_commit()
 
+        self.allTracks = self.board.get_tracks()
+        self.allVias = self.board.get_vias()
+        self.allPads = self.board.get_pads()
+        self.selected = self.board.get_selection()
+
         avoid = self.avoid_junctions.IsChecked()
         classes = self.config["classes"]
         for classname in classes:
@@ -275,18 +280,15 @@ class RoundTracks(RoundTracksDialog):
         # A 90 degree bend will get a maximum radius of this amount
         RADIUS = from_mm(scaling / (math.sin(math.pi / 4) + 1))
 
-        board = self.board
-        allTracks = board.get_tracks()
-        allVias = board.get_vias()
-        allPads = board.get_pads()
-        selected = board.get_selection()
-        nets = board.get_nets(netclass_filter=netclass)
-
+        nets = sorted(self.board.get_nets(netclass_filter=netclass),
+                      key = lambda net: net.code)
         tracksToRemove = []
+        itemsToCreate = []
+        tracksModified = []
 
         for net in nets:
-            tracksInNet = [t for t in allTracks if t.net == net]
-            viasInNet = [v for v in allVias if v.net == net]
+            tracksInNet = [t for t in self.allTracks if t.net == net]
+            viasInNet = [v for v in self.allVias if v.net == net]
 
             tracksPerLayer = {}
             viasPerLayer = {}
@@ -315,8 +317,8 @@ class RoundTracks(RoundTracksDialog):
             FCuPadsInNet = []
             BCuPadsInNet = []
 
-            for p in allPads:
-                if p.net == net and (not onlySelection or p in selected):
+            for p in self.allPads:
+                if p.net == net and (not onlySelection or p in self.selected):
                     if p.pad_type in [PadType.PT_NPTH, PadType.PT_PTH]:
                         padsInNet.append(p)
                     else:
@@ -354,8 +356,8 @@ class RoundTracks(RoundTracksDialog):
                 # for each remaining intersection, shorten each track by the same amount, and place a track between.
                 tracksToAdd = []
                 arcsToAdd = []
-                tracksModified = []
                 trackLengths = {}
+                
                 for ip in intersections:
                     (newX, newY) = (ip.x, ip.y)
                     tracksHere = []
@@ -439,8 +441,8 @@ class RoundTracks(RoundTracksDialog):
                                 theta = math.pi / 2 - halfTrackAngle[t1]
                                 f = 1 / (2 * math.cos(theta) + 2)
 
-                                sp = tracksHere[t1].start
-                                ep = tracksHere[(t1 + 1) % len(tracksHere)].start
+                                sp = deepcopy(tracksHere[t1].start)
+                                ep = deepcopy(tracksHere[(t1 + 1) % len(tracksHere)].start)
                 
                                 if halfTrackAngle[t1] > math.pi / 2 - 0.001:
                                     tracksToAdd.append(
@@ -490,8 +492,8 @@ class RoundTracks(RoundTracksDialog):
                         for t1 in range(len(tracksHere)):
                             # dont add 2 new tracks in the 2 track case
                             if not (len(tracksHere) == 2 and t1 == 1):
-                                newPoint1 = tracksHere[t1].start
-                                newPoint2 = tracksHere[(t1 + 1) % len(tracksHere)].start
+                                newPoint1 = deepcopy(tracksHere[t1].start)
+                                newPoint2 = deepcopy(tracksHere[(t1 + 1) % len(tracksHere)].start)
                                 tracksToAdd.append(
                                     (
                                         newPoint1,
@@ -512,31 +514,31 @@ class RoundTracks(RoundTracksDialog):
                     track.width = width
                     track.layer = layer
                     track.net = net
-                    created_track = board.create_items(track)[0]
-                    if onlySelection:
-                        board.add_to_selection(created_track)
+                    itemsToCreate.append(track)
 
                 for trackpoints in arcsToAdd:
                     (sp, ep, mp, width, layer, net) = trackpoints
 
                     arc = Arc()
-                    arc.start = sp
-                    arc.mid = mp
-                    arc.end = ep
+                    arc.start = deepcopy(sp)
+                    arc.mid = deepcopy(mp)
+                    arc.end = deepcopy(ep)
                     arc.width = width
                     arc.layer = layer
                     arc.net = net
-                    created_arc = board.create_items(arc)[0]
-                    if onlySelection:
-                        board.add_to_selection(created_arc)
-
-                board.update_items(tracksModified)
+                    itemsToCreate.append(arc)
 
             self.prog.Pulse(
                 f"Netclass: {netclass}, {net.code+1} of {len(nets)}{msg}"
             )
 
-        board.remove_items(tracksToRemove)
+        createdItems = self.board.create_items(itemsToCreate)
+
+        if onlySelection:
+            self.board.add_to_selection(createdItems)
+
+        self.board.update_items(tracksModified)
+        self.board.remove_items(tracksToRemove)
 
 
 if __name__ == "__main__":
