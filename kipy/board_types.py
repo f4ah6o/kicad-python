@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from token import OP
 from typing import Dict, Sequence, Set, Optional
 from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any

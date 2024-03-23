@@ -27,7 +27,7 @@ from copy import deepcopy
 from typing import Set
 
 from kipy import KiCad
-from kipy.board_types import Arc, Track, PadType, Via, BoardLayer
+from kipy.board_types import Arc, Track, PadType, BoardLayer
 from kipy.geometry import Vector2
 from kipy.util import from_mm
 
