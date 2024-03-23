@@ -55,7 +55,7 @@ class Net(Wrapper):
     
     def __eq__(self, other):
         if isinstance(other, Net):
-            return self.name == other.name and self.code == other.code
+            return self.code == other.code and self.name == other.name
         return NotImplemented
 
 class Track(BoardItem):

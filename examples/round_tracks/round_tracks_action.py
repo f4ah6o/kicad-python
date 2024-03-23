@@ -108,6 +108,12 @@ class RoundTracks(RoundTracksDialog):
                 )
         self.validate_all_data()
 
+        # self.board.refill_zones()
+        # time.sleep(1)
+        # print(self.kicad.get_version())
+        # time.sleep(1)
+        # print(self.kicad.get_version())
+
     def run(self, event):
         start = time.time()
         self.apply.SetLabel("Working...")
@@ -382,11 +388,17 @@ class RoundTracks(RoundTracksDialog):
                             skip = True
                             break
 
+                    if skip:
+                        continue
+
                     # If the intersection is within a pad, but none of the tracks end within the pad, skip
                     for p in padsInNet:
                         if withinPad(self.board, p, ip, tracksHere):
                             skip = True
                             break
+
+                    if skip:
+                        continue
 
                     if layer == BoardLayer.BL_F_Cu:
                         for p in FCuPadsInNet:

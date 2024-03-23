@@ -247,7 +247,9 @@ class Board:
         self._kicad.send(cmd, Empty)
 
     def refill_zones(self):
-        pass
+        cmd = board_commands_pb2.RefillZones()
+        cmd.board.CopyFrom(self._doc)
+        self._kicad.send(cmd, Empty)
 
     def hit_test(self, item: Item, position: Vector2, tolerance: int = 0) -> bool:
         cmd = HitTest()
