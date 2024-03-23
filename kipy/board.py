@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List, Dict, Union, Iterable, Sequence, cast
+from typing import List, Dict, Union, Iterable, Optional, Sequence, cast
 from google.protobuf.empty_pb2 import Empty
 
 from kipy.board_types import (
@@ -31,12 +31,11 @@ from kipy.board_types import (
 )
 from kipy.client import KiCadClient
 from kipy.common_types import Commit, TextAttributes
-from kipy.enums import KICAD_T
 from kipy.geometry import Box2, Vector2
-from kipy.util import pack_any, make_item_type
+from kipy.util import pack_any
 from kipy.wrapper import Item, Wrapper
 
-from kipy.proto.common.types import DocumentSpecifier, KIID
+from kipy.proto.common.types import DocumentSpecifier, KIID, KiCadObjectType
 from kipy.proto.common.commands.editor_commands_pb2 import (
     BeginCommit, BeginCommitResponse, CommitAction,
     EndCommit, EndCommitResponse,
@@ -54,11 +53,17 @@ from kipy.proto.board import board_commands_pb2
 from kipy.proto.board.board_pb2 import (    # noqa
     BoardLayerClass 
 )
+from kipy.proto.board.board_types_pb2 import ( #noqa
+    BoardLayer
+)
 
 class BoardLayerGraphicsDefaults(Wrapper):
     """Wraps a kiapi.board.types.BoardLayerGraphicsDefaults object"""
-    def __init__(self, proto: board_pb2.BoardLayerGraphicsDefaults = board_pb2.BoardLayerGraphicsDefaults()):
-        self._proto = proto
+    def __init__(self, proto: Optional[board_pb2.BoardLayerGraphicsDefaults] = None):
+        self._proto = board_pb2.BoardLayerGraphicsDefaults()
+    
+        if proto is not None:
+            self._proto.CopyFrom(proto)
 
     @property
     def text(self) -> TextAttributes:
@@ -115,15 +120,17 @@ class Board:
             for result in self._kicad.send(command, CreateItemsResponse).created_items
         ]
 
-    def get_items(self, type_filter: Union[KICAD_T, List[KICAD_T]]) -> Sequence[Wrapper]:
+    def get_items(
+        self, types: Union[KiCadObjectType.ValueType, Sequence[KiCadObjectType.ValueType]]
+    ) -> Sequence[Wrapper]:
         """Retrieves items from the board, optionally filtering to a single or set of types"""
         command = GetItems()
         command.header.document.CopyFrom(self._doc)
 
-        if isinstance(type_filter, KICAD_T):
-            command.types.add(type=type_filter)
+        if isinstance(types, int):
+            command.types.append(types)
         else:
-            command.types.extend([make_item_type(t) for t in type_filter])
+            command.types.extend(types)
 
         return [unwrap(item) for item in self._kicad.send(command, GetItemsResponse).items]
 
@@ -131,20 +138,20 @@ class Board:
         return [
             cast(Track, item) if isinstance(item, Track) else cast(Arc, item)
             for item in self.get_items(
-                type_filter=[KICAD_T.PCB_TRACE_T, KICAD_T.PCB_ARC_T]
+                types=[KiCadObjectType.KOT_PCB_TRACE, KiCadObjectType.KOT_PCB_ARC]
             )
         ]
 
     def get_vias(self) -> Sequence[Via]:
-        return [cast(Via, item) for item in self.get_items(type_filter=[KICAD_T.PCB_VIA_T])]
+        return [cast(Via, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_VIA])]
     
     def get_pads(self) -> Sequence[Pad]:
-        return [cast(Pad, item) for item in self.get_items(type_filter=[KICAD_T.PCB_PAD_T])]
+        return [cast(Pad, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_PAD])]
     
     def get_footprints(self) -> Sequence[FootprintInstance]:
         return [
             cast(FootprintInstance, item)
-            for item in self.get_items(type_filter=[KICAD_T.PCB_FOOTPRINT_T])
+            for item in self.get_items(types=[KiCadObjectType.KOT_PCB_FOOTPRINT])
         ]
     
     def update_items(self, items: Union[BoardItem, Sequence[BoardItem]]):

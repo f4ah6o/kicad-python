@@ -20,9 +20,8 @@ from typing import Dict, Sequence, Set, Optional
 from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
 
-from kipy.enums import PCB_LAYER_ID
 from kipy.proto.common.types import KIID
-from kipy.proto.common.types.base_types_pb2 import LockedState, Layer
+from kipy.proto.common.types.base_types_pb2 import LockedState
 from kipy.proto.board import board_types_pb2
 from kipy.common_types import TextAttributes
 from kipy.geometry import Vector2
@@ -30,8 +29,9 @@ from kipy.util import unpack_any
 from kipy.wrapper import Item, Wrapper
 
 # Re-exported protobuf enum types
-from kipy.proto.board.board_types_pb2 import (
-    PadType 
+from kipy.proto.board.board_types_pb2 import ( #noqa
+    PadType,
+    BoardLayer
 )
 
 class BoardItem(Item):
@@ -76,12 +76,12 @@ class Track(BoardItem):
         self._proto.net.CopyFrom(net.proto)
     
     @property
-    def layer(self) -> PCB_LAYER_ID:
-        return PCB_LAYER_ID(self._proto.layer.id)
+    def layer(self) -> board_types_pb2.BoardLayer.ValueType:
+        return self._proto.layer
     
     @layer.setter
-    def layer(self, layer: PCB_LAYER_ID):
-        self._proto.layer.id = layer.value
+    def layer(self, layer: board_types_pb2.BoardLayer.ValueType):
+        self._proto.layer = layer
 
     @property
     def start(self) -> Vector2:
@@ -150,11 +150,11 @@ class Via(BoardItem):
     def net(self, net: Net):
         self._proto.net.CopyFrom(net.proto)
 
-    def layer_set(self) -> Set[PCB_LAYER_ID]:
+    def layer_set(self) -> Set[board_types_pb2.BoardLayer.ValueType]:
         s = set()
-        layer = self._proto.pad_stack.start_layer.id
-        while layer <= self._proto.pad_stack.end_layer.id:
-            s.add(PCB_LAYER_ID(layer))
+        layer = self._proto.pad_stack.start_layer
+        while layer <= self._proto.pad_stack.end_layer:
+            s.add(layer)
             layer += 1
         return s
 
@@ -185,11 +185,11 @@ class Pad(BoardItem):
     def pad_type(self) -> PadType.ValueType:
         return self._proto.type
 
-    def layer_set(self) -> Set[PCB_LAYER_ID]:
+    def layer_set(self) -> Set[board_types_pb2.BoardLayer.ValueType]:
         s = set()
-        layer = self._proto.pad_stack.start_layer.id
-        while layer <= self._proto.pad_stack.end_layer.id:
-            s.add(PCB_LAYER_ID(layer))
+        layer = self._proto.pad_stack.start_layer
+        while layer <= self._proto.pad_stack.end_layer:
+            s.add(layer)
             layer += 1
         return s
 
@@ -214,12 +214,12 @@ class Text(BoardItem):
         self._proto.text.position.CopyFrom(pos.proto)
 
     @property
-    def layer(self) -> PCB_LAYER_ID:
-        return PCB_LAYER_ID(self._proto.text.layer.id)
+    def layer(self) -> board_types_pb2.BoardLayer.ValueType:
+        return self._proto.layer
     
     @layer.setter
-    def layer(self, layer: PCB_LAYER_ID):
-        self._proto.text.layer.id = layer.value
+    def layer(self, layer: board_types_pb2.BoardLayer.ValueType):
+        self._proto.layer = layer
 
     @property
     def locked(self) -> bool:

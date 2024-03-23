@@ -18,3 +18,5 @@
 # flake8: noqa
 
 from .base_types_pb2 import *
+from .enums_pb2 import *
+from .project_settings_pb2 import *

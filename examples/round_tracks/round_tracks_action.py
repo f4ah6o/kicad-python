@@ -27,8 +27,7 @@ from copy import deepcopy
 from typing import Set
 
 from kipy import KiCad
-from kipy.enums import PCB_LAYER_ID
-from kipy.board_types import Arc, Track, PadType, Via
+from kipy.board_types import Arc, Track, PadType, Via, BoardLayer
 from kipy.geometry import Vector2
 from kipy.util import from_mm
 
@@ -325,7 +324,7 @@ class RoundTracks(RoundTracksDialog):
                     if p.pad_type in [PadType.PT_NPTH, PadType.PT_PTH]:
                         padsInNet.append(p)
                     else:
-                        if PCB_LAYER_ID.B_Cu in p.layer_set():
+                        if BoardLayer.BL_B_Cu in p.layer_set():
                             BCuPadsInNet.append(p)
                         else:
                             FCuPadsInNet.append(p)
@@ -389,12 +388,12 @@ class RoundTracks(RoundTracksDialog):
                             skip = True
                             break
 
-                    if layer == PCB_LAYER_ID.F_Cu:
+                    if layer == BoardLayer.BL_F_Cu:
                         for p in FCuPadsInNet:
                             if withinPad(self.board, p, ip, tracksHere):
                                 skip = True
                                 break
-                    elif layer == PCB_LAYER_ID.B_Cu:
+                    elif layer == BoardLayer.BL_B_Cu:
                         for p in BCuPadsInNet:
                             if withinPad(self.board, p, ip, tracksHere):
                                 skip = True
