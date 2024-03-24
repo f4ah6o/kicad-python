@@ -23,7 +23,19 @@ from google.protobuf.message import Message
 from kipy.proto.common import ApiRequest, ApiResponse, ApiStatusCode
 
 class ApiError(Exception):
-    pass
+    def __init__(self, message: str, raw_message: str = "",
+                 code: ApiStatusCode.ValueType = ApiStatusCode.AS_BAD_REQUEST):            
+         super().__init__(message)
+         self._raw_message = raw_message
+         self._code = code
+
+    @property
+    def code(self) -> ApiStatusCode.ValueType:
+        return self._code
+    
+    @property
+    def raw_message(self) -> str:
+        return self.raw_message
 
 class KiCadClient:
     def __init__(self, socket_path: str, client_name: str, kicad_token: str):
@@ -50,7 +62,13 @@ class KiCadClient:
         except pynng.exceptions.NNGException as e:
             raise e
 
-        reply_data = self._conn.recv_msg()
+        try:
+            reply_data = self._conn.recv_msg()
+        except pynng.exceptions.Timeout:
+            raise IOError("Timeout while receiving reply from KiCad")
+        except pynng.exceptions.NNGException as e:
+            raise e
+        
         reply = ApiResponse()
         reply.ParseFromString(reply_data.bytes)
 
@@ -67,4 +85,5 @@ class KiCadClient:
 
             return cast(response_type, response)
         else:
-            raise ApiError(f"KiCad returned error: {reply.status.error_message}")
+            raise ApiError(f"KiCad returned error: {reply.status.error_message}",
+                           raw_message=reply.status.error_message, code=reply.status.status)

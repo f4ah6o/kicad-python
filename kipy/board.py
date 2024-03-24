@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from time import sleep
 from typing import List, Dict, Union, Iterable, Optional, Sequence, cast
 from google.protobuf.empty_pb2 import Empty
 
@@ -29,12 +30,14 @@ from kipy.board_types import (
     Via,
     unwrap
 )
-from kipy.client import KiCadClient
+from kipy.client import ApiError, KiCadClient
 from kipy.common_types import Commit, TextAttributes
 from kipy.geometry import Box2, Vector2
+from kipy.proto.common.envelope_pb2 import ApiStatusCode
 from kipy.util import pack_any
 from kipy.wrapper import Item, Wrapper
 
+from kipy.proto.common.commands import Ping
 from kipy.proto.common.types import DocumentSpecifier, KIID, KiCadObjectType
 from kipy.proto.common.commands.editor_commands_pb2 import (
     BeginCommit, BeginCommitResponse, CommitAction,
@@ -248,10 +251,32 @@ class Board:
 
         self._kicad.send(cmd, Empty)
 
-    def refill_zones(self):
+    def refill_zones(self, block=True, max_poll_seconds: float = 30.0,
+                     poll_interval_seconds: float = 0.5):
         cmd = board_commands_pb2.RefillZones()
         cmd.board.CopyFrom(self._doc)
         self._kicad.send(cmd, Empty)
+
+        if not block:
+            return
+
+        # Zone fill is a blocking operation that can block the entire event loop.
+        # To hide this from API users somewhat, do an initial busy loop here
+        sleeps = 0
+
+        while sleeps < max_poll_seconds:
+            sleep(poll_interval_seconds)
+            try:
+                self._kicad.send(Ping(), Empty)
+            except IOError:
+                # transport-layer timeout
+                continue
+            except ApiError as e:
+                if e.code == ApiStatusCode.AS_BUSY:
+                    continue
+                else:
+                    raise e
+            break
 
     def hit_test(self, item: Item, position: Vector2, tolerance: int = 0) -> bool:
         cmd = HitTest()

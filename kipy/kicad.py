@@ -20,6 +20,7 @@ import platform
 import random
 import string
 from typing import Sequence
+from google.protobuf.empty_pb2 import Empty
 
 from kipy.board import Board
 from kipy.client import KiCadClient, ApiError
@@ -61,6 +62,9 @@ class KiCad:
         """Returns the KiCad version as a string, including any package-specific info"""
         response = self._client.send(commands.GetVersion(), commands.GetVersionResponse)
         return response.version.full_version
+    
+    def ping(self):
+        self._client.send(commands.Ping(), Empty)
 
     def run_action(self, action: str):
         """Runs a KiCad tool action, if it is available
