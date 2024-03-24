@@ -1,3 +1,4 @@
+# Standard Python stuff
 __pycache__/
 *.py[cod]
 *$py.class
@@ -19,12 +20,13 @@ MANIFEST
 .DS_Store
 .vscode/
 
-kicad-build/
-
 # We don't want to lock dependency versions for this library right now
 poetry.lock
 
 # These should be generated, not checked in
-kipy/enums/_enums.py
-kipy/**/*_pb2.py
-kipy/**/*_pb2.pyi
+kipy/proto/**/*_pb2.py
+kipy/proto/**/*_pb2.pyi
+
+# Tooling
+.nox
+.ruff_cache

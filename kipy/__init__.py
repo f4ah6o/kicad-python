@@ -17,4 +17,4 @@
 
 from kipy.kicad import KiCad
 
-__all__ = [KiCad]
+__all__ = ("KiCad",)

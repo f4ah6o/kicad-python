@@ -67,4 +67,4 @@ class KiCadClient:
 
             return cast(response_type, response)
         else:
-            raise ApiError("KiCad returned error: {}".format(reply.status.error_message))
+            raise ApiError(f"KiCad returned error: {reply.status.error_message}")
