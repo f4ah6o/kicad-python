@@ -46,23 +46,27 @@ def default_kicad_token() -> str:
 class KiCad:
     def __init__(self, socket_path: str=default_socket_path(),
                  client_name: str=random_client_name(),
-                 kicad_token: str=default_kicad_token()):
+                 kicad_token: str=default_kicad_token(),
+                 timeout_ms: int=2000):
         """Creates a connection to a running KiCad instance
 
         :param socket_path: The path to the IPC API socket (leave default to read from the
             KICAD_API_SOCKET environment variable, which will be set automatically by KiCad when
             launching API plugins, or to use the default platform-dependent socket path if the
             environment variable is not set).
-        "param client_name: A unique name identifying this plugin instance.  Leave default to
-            generate a random client name. 
+        :param client_name: A unique name identifying this plugin instance.  Leave default to
+            generate a random client name.
+        :param kicad_token: A token that can be provided to the client to uniquely identify a
+            KiCad instance.  Leave default to read from the KICAD_API_TOKEN environment variable.
+        :param timeout_ms: The maximum time to wait for a response from KiCad, in milliseconds
         """
-        self._client = KiCadClient(socket_path, client_name, kicad_token)
-        
+        self._client = KiCadClient(socket_path, client_name, kicad_token, timeout_ms)
+
     def get_version(self):
         """Returns the KiCad version as a string, including any package-specific info"""
         response = self._client.send(commands.GetVersion(), commands.GetVersionResponse)
         return response.version.full_version
-    
+
     def ping(self):
         self._client.send(commands.Ping(), Empty)
 
@@ -76,18 +80,18 @@ class KiCad:
         :return: a value from the KIAPI.COMMON.COMMANDS.RUN_ACTION_STATUS enum
         """
         return self._client.send(commands.RunAction(), commands.RunActionResponse)
-    
+
     def get_open_documents(self, doc_type: DocumentType.ValueType) -> Sequence[DocumentSpecifier]:
         """Retrieves a list of open documents matching the given type"""
         command = commands.GetOpenDocuments()
         command.type = doc_type
         response = self._client.send(command, commands.GetOpenDocumentsResponse)
         return response.documents
-    
+
     def get_project(self, document: DocumentSpecifier) -> Project:
         """Returns a Project object for the given document"""
         return Project(self._client, document)
-            
+
     def get_board(self) -> Board:
         """Retrieves a reference to the PCB open in KiCad, if one exists"""
         docs = self.get_open_documents(DocumentType.DOCTYPE_PCB)

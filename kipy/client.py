@@ -20,46 +20,33 @@ from typing import TypeVar
 
 from google.protobuf.message import Message
 
+from kipy.errors import ApiError, ConnectionError
 from kipy.proto.common import ApiRequest, ApiResponse, ApiStatusCode
 
-class ApiError(Exception):
-    def __init__(self, message: str, raw_message: str = "",
-                 code: ApiStatusCode.ValueType = ApiStatusCode.AS_BAD_REQUEST):
-         super().__init__(message)
-         self._raw_message = raw_message
-         self._code = code
-
-    @property
-    def code(self) -> ApiStatusCode.ValueType:
-        return self._code
-
-    @property
-    def raw_message(self) -> str:
-        return self.raw_message
-
 class KiCadClient:
-    def __init__(self, socket_path: str, client_name: str, kicad_token: str):
+    def __init__(self, socket_path: str, client_name: str, kicad_token: str, timeout_ms: int):
         self._socket_path = socket_path
         self._client_name = client_name
         self._kicad_token = kicad_token
+        self._timeout_ms = timeout_ms
         self._connected = False
 
     def _connect(self):
         if self._connected:
             self._conn.close()
 
-        try:    
+        try:
             self._conn = pynng.Req0(dial=self._socket_path, block_on_dial=True,
-                                    send_timeout=3000, recv_timeout=3000)
+                                    send_timeout=self._timeout_ms, recv_timeout=self._timeout_ms)
             self._connected = True
         except pynng.exceptions.NNGException as e:
             self._connected = False
-            raise e
+            raise ConnectionError(f"Failed to connect to KiCad: {e}") from None
 
     @property
     def connected(self):
         return self._connected
-    
+
     R = TypeVar('R', bound=Message)
 
     def send(self, command: Message, response_type: type[R]) -> R:
@@ -73,17 +60,13 @@ class KiCadClient:
 
         try:
             self._conn.send(envelope.SerializeToString())
-        except pynng.exceptions.Timeout:
-            raise IOError("Timeout while sending command to KiCad")
         except pynng.exceptions.NNGException as e:
-            raise e
+            raise ConnectionError(f"Failed to send command to KiCad: {e}") from None
 
         try:
             reply_data = self._conn.recv_msg()
-        except pynng.exceptions.Timeout:
-            raise IOError("Timeout while receiving reply from KiCad")
         except pynng.exceptions.NNGException as e:
-            raise e
+            raise ConnectionError(f"Error receiving reply from KiCad: {e}") from None
 
         reply = ApiResponse()
         reply.ParseFromString(reply_data.bytes)
