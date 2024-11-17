@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict, Sequence, Set, Optional, cast
+from typing import Dict, Sequence, Optional, Union
 from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
 
 from kipy.proto.common.types import KIID
-from kipy.proto.common.types.base_types_pb2 import LockedState
+from kipy.proto.common.types.base_types_pb2 import LockedState, PolygonWithHoles
 from kipy.proto.board import board_types_pb2
-from kipy.common_types import TextAttributes
+from kipy.common_types import TextAttributes, LibraryIdentifier
 from kipy.geometry import Vector2
 from kipy.util import unpack_any
 from kipy.wrapper import Item, Wrapper
@@ -52,7 +52,7 @@ class Net(Wrapper):
     @property
     def code(self) -> int:
         return self._proto.code.value
-    
+
     def __eq__(self, other):
         if isinstance(other, Net):
             return self.code == other.code and self.name == other.name
@@ -69,15 +69,15 @@ class Track(BoardItem):
     @property
     def net(self) -> Net:
         return Net(self._proto.net)
-    
+
     @net.setter
     def net(self, net: Net):
         self._proto.net.CopyFrom(net.proto)
-    
+
     @property
     def layer(self) -> board_types_pb2.BoardLayer.ValueType:
         return self._proto.layer
-    
+
     @layer.setter
     def layer(self, layer: board_types_pb2.BoardLayer.ValueType):
         self._proto.layer = layer
@@ -85,7 +85,7 @@ class Track(BoardItem):
     @property
     def start(self) -> Vector2:
         return Vector2(self._proto.start)
-    
+
     @start.setter
     def start(self, point: Vector2):
         self._proto.start.CopyFrom(point.proto)
@@ -93,7 +93,7 @@ class Track(BoardItem):
     @property
     def end(self) -> Vector2:
         return Vector2(self._proto.end)
-    
+
     @end.setter
     def end(self, point: Vector2):
         self._proto.end.CopyFrom(point.proto)
@@ -101,7 +101,7 @@ class Track(BoardItem):
     @property
     def width(self) -> int:
         return self._proto.width.value_nm
-    
+
     @width.setter
     def width(self, width: int):
         self._proto.width.value_nm = width
@@ -110,7 +110,7 @@ class Track(BoardItem):
         """Calculates track length in nanometers"""
         return (self.end - self.start).length()
 
-class Arc(BoardItem):
+class ArcTrack(BoardItem):
     """Represents an arc track segment"""
     def __init__(self, proto: Optional[board_types_pb2.Arc] = None):
         self._proto = board_types_pb2.Arc()
@@ -121,15 +121,15 @@ class Arc(BoardItem):
     @property
     def net(self) -> Net:
         return Net(self._proto.net)
-    
+
     @net.setter
     def net(self, net: Net):
         self._proto.net.CopyFrom(net.proto)
-    
+
     @property
     def layer(self) -> board_types_pb2.BoardLayer.ValueType:
         return self._proto.layer
-    
+
     @layer.setter
     def layer(self, layer: board_types_pb2.BoardLayer.ValueType):
         self._proto.layer = layer
@@ -137,7 +137,7 @@ class Arc(BoardItem):
     @property
     def start(self) -> Vector2:
         return Vector2(self._proto.start)
-    
+
     @start.setter
     def start(self, point: Vector2):
         self._proto.start.CopyFrom(point.proto)
@@ -145,7 +145,7 @@ class Arc(BoardItem):
     @property
     def end(self) -> Vector2:
         return Vector2(self._proto.end)
-    
+
     @end.setter
     def end(self, point: Vector2):
         self._proto.end.CopyFrom(point.proto)
@@ -153,7 +153,7 @@ class Arc(BoardItem):
     @property
     def width(self) -> int:
         return self._proto.width.value_nm
-    
+
     @width.setter
     def width(self, width: int):
         self._proto.width.value_nm = width
@@ -161,7 +161,7 @@ class Arc(BoardItem):
     @property
     def mid(self) -> Vector2:
         return Vector2(self._proto.mid)
-    
+
     @mid.setter
     def mid(self, point: Vector2):
         self._proto.mid.CopyFrom(point.proto)
@@ -176,7 +176,7 @@ class Via(BoardItem):
     @property
     def position(self) -> Vector2:
         return Vector2(self._proto.position)
-    
+
     @position.setter
     def position(self, position: Vector2):
         self._proto.position.CopyFrom(position.proto)
@@ -184,18 +184,10 @@ class Via(BoardItem):
     @property
     def net(self) -> Net:
         return Net(self._proto.net)
-    
+
     @net.setter
     def net(self, net: Net):
         self._proto.net.CopyFrom(net.proto)
-
-    def layer_set(self) -> Set[board_types_pb2.BoardLayer.ValueType]:
-        s = set()
-        layer = self._proto.pad_stack.start_layer
-        while layer <= self._proto.pad_stack.end_layer:
-            s.add(layer)
-            layer = cast(board_types_pb2.BoardLayer.ValueType, layer + 1)
-        return s
 
 class Pad(BoardItem):
     def __init__(self, proto: Optional[board_types_pb2.Pad] = None):
@@ -207,7 +199,7 @@ class Pad(BoardItem):
     @property
     def position(self) -> Vector2:
         return Vector2(self._proto.position)
-    
+
     @position.setter
     def position(self, position: Vector2):
         self._proto.position.CopyFrom(position.proto)
@@ -215,7 +207,7 @@ class Pad(BoardItem):
     @property
     def net(self) -> Net:
         return Net(self._proto.net)
-    
+
     @net.setter
     def net(self, net: Net):
         self._proto.net.CopyFrom(net.proto)
@@ -224,13 +216,230 @@ class Pad(BoardItem):
     def pad_type(self) -> PadType.ValueType:
         return self._proto.type
 
-    def layer_set(self) -> Set[board_types_pb2.BoardLayer.ValueType]:
-        s = set()
-        layer = self._proto.pad_stack.start_layer
-        while layer <= self._proto.pad_stack.end_layer:
-            s.add(layer)
-            layer = cast(board_types_pb2.BoardLayer.ValueType, layer + 1)
-        return s
+class Shape(BoardItem):
+    """Represents a graphic shape on a board or footprint"""
+    def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
+        self._proto = board_types_pb2.GraphicShape()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def id(self) -> KIID:
+        return self._proto.id
+
+    @property
+    def locked(self) -> bool:
+        return self._proto.locked == LockedState.LS_LOCKED
+
+    @locked.setter
+    def locked(self, locked: bool):
+        self._proto.locked = {
+            True: LockedState.LS_LOCKED,
+            False: LockedState.LS_UNLOCKED,
+        }.get(locked, LockedState.LS_UNLOCKED)
+
+    @property
+    def layer(self) -> board_types_pb2.BoardLayer.ValueType:
+        return self._proto.layer
+
+    @layer.setter
+    def layer(self, layer: board_types_pb2.BoardLayer.ValueType):
+        self._proto.layer = layer
+
+    @property
+    def net(self) -> Net:
+        return Net(self._proto.net)
+
+    @net.setter
+    def net(self, net: Net):
+        self._proto.net.CopyFrom(net.proto)
+
+class Segment(Shape):
+    """Represents a graphic line segment (not a track) on a board or footprint"""
+    def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
+        self._proto = board_types_pb2.GraphicShape()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert(self._proto.WhichOneof('geometry') == 'segment')
+
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.segment.start)
+
+    @start.setter
+    def start(self, point: Vector2):
+        self._proto.segment.start.CopyFrom(point.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.segment.end)
+
+    @end.setter
+    def end(self, point: Vector2):
+        self._proto.segment.end.CopyFrom(point.proto)
+
+class Arc(Shape):
+    """Represents a graphic arc (not a track) on a board or footprint"""
+    def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
+        self._proto = board_types_pb2.GraphicShape()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert(self._proto.WhichOneof('geometry') == 'arc')
+
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.arc.start)
+
+    @start.setter
+    def start(self, point: Vector2):
+        self._proto.arc.start.CopyFrom(point.proto)
+
+    @property
+    def mid(self) -> Vector2:
+        return Vector2(self._proto.arc.mid)
+
+    @mid.setter
+    def mid(self, point: Vector2):
+        self._proto.arc.mid.CopyFrom(point.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.arc.end)
+
+    @end.setter
+    def end(self, point: Vector2):
+        self._proto.arc.end.CopyFrom(point.proto)
+
+class Circle(Shape):
+    """Represents a graphic circle on a board or footprint"""
+    def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
+        self._proto = board_types_pb2.GraphicShape()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert(self._proto.WhichOneof('geometry') == 'circle')
+
+    @property
+    def center(self) -> Vector2:
+        return Vector2(self._proto.circle.center)
+
+    @center.setter
+    def center(self, point: Vector2):
+        self._proto.circle.center.CopyFrom(point.proto)
+
+    @property
+    def radius_point(self) -> Vector2:
+        return Vector2(self._proto.circle.radius_point)
+
+    @radius_point.setter
+    def radius(self, radius_point: Vector2):
+        self._proto.circle.radius_point.CopyFrom(radius_point.proto)
+
+class Rectangle(Shape):
+    """Represents a graphic rectangle on a board or footprint"""
+    def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
+        self._proto = board_types_pb2.GraphicShape()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert(self._proto.WhichOneof('geometry') == 'rectangle')
+
+    @property
+    def top_left(self) -> Vector2:
+        return Vector2(self._proto.rectangle.top_left)
+
+    @top_left.setter
+    def top_left(self, point: Vector2):
+        self._proto.rectangle.top_left.CopyFrom(point.proto)
+
+    @property
+    def bottom_right(self) -> Vector2:
+        return Vector2(self._proto.rectangle.bottom_right)
+
+    @bottom_right.setter
+    def bottom_right(self, point: Vector2):
+        self._proto.rectangle.bottom_right.CopyFrom(point.proto)
+
+class Polygon(Shape):
+    """Represents a graphic polygon on a board or footprint"""
+    def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
+        self._proto = board_types_pb2.GraphicShape()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert(self._proto.WhichOneof('geometry') == 'polygon')
+
+    @property
+    def polygons(self) -> Sequence[PolygonWithHoles]:
+        return self._proto.polygon.polygons
+
+    @polygons.setter
+    def polygons(self, polygons: Sequence[PolygonWithHoles]):
+        del self._proto.polygon.polygons[:]
+        self._proto.polygon.polygons.extend(polygons)
+
+class Bezier(Shape):
+    """Represents a graphic bezier curve on a board or footprint"""
+    def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
+        self._proto = board_types_pb2.GraphicShape()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert(self._proto.WhichOneof('geometry') == 'bezier')
+
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.bezier.start)
+
+    @start.setter
+    def start(self, point: Vector2):
+        self._proto.bezier.start.CopyFrom(point.proto)
+
+    @property
+    def control1(self) -> Vector2:
+        return Vector2(self._proto.bezier.control1)
+
+    @control1.setter
+    def control1(self, point: Vector2):
+        self._proto.bezier.control1.CopyFrom(point.proto)
+
+    @property
+    def control2(self) -> Vector2:
+        return Vector2(self._proto.bezier.control2)
+
+    @control2.setter
+    def control2(self, point: Vector2):
+        self._proto.bezier.control2.CopyFrom(point.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.bezier.end)
+
+    @end.setter
+    def end(self, point: Vector2):
+        self._proto.bezier.end.CopyFrom(point.proto)
+
+def to_concrete_shape(
+    shape: Shape,
+) -> Union[Segment, Arc, Circle, Rectangle, Polygon, Bezier, Shape]:
+    return {
+        'segment': Segment(shape._proto),
+        'arc': Arc(shape._proto),
+        'circle': Circle(shape._proto),
+        'rectangle': Rectangle(shape._proto),
+        'polygon': Polygon(shape._proto),
+        'bezier': Bezier(shape._proto),
+        None: shape
+    }.get(shape._proto.WhichOneof('geometry'), shape)
 
 class Text(BoardItem):
     """Represents a free text object, or the text component of a field"""
@@ -244,11 +453,11 @@ class Text(BoardItem):
     @property
     def id(self) -> KIID:
         return self._proto.text.id
-    
+
     @property
     def position(self) -> Vector2:
         return Vector2(self._proto.text.position)
-    
+
     @position.setter
     def position(self, pos: Vector2):
         self._proto.text.position.CopyFrom(pos.proto)
@@ -256,7 +465,7 @@ class Text(BoardItem):
     @property
     def layer(self) -> board_types_pb2.BoardLayer.ValueType:
         return self._proto.layer
-    
+
     @layer.setter
     def layer(self, layer: board_types_pb2.BoardLayer.ValueType):
         self._proto.layer = layer
@@ -264,7 +473,7 @@ class Text(BoardItem):
     @property
     def locked(self) -> bool:
         return self._proto.text.locked == LockedState.LS_LOCKED
-    
+
     @locked.setter
     def locked(self, locked: bool):
         self._proto.text.locked = {
@@ -275,7 +484,7 @@ class Text(BoardItem):
     @property
     def text(self) -> str:
         return self._proto.text.text
-    
+
     @text.setter
     def text(self, text: str):
         self._proto.text.text = text
@@ -283,7 +492,7 @@ class Text(BoardItem):
     @property
     def attributes(self) -> TextAttributes:
         return TextAttributes(proto_ref=self._proto.text.attributes)
-    
+
     @attributes.setter
     def attributes(self, attributes: TextAttributes):
         self._proto.text.attributes.CopyFrom(attributes.proto)
@@ -301,15 +510,15 @@ class Field(BoardItem):
     @property
     def field_id(self) -> int:
         return self._proto.id.id
-    
+
     @property
     def name(self) -> str:
         return self._proto.name
-    
+
     @property
     def text(self) -> Text:
         return Text(proto_ref=self._proto.text)
-    
+
     @text.setter
     def text(self, text: Text):
         self._proto.text.CopyFrom(text.proto)
@@ -327,7 +536,7 @@ class FootprintAttributes(Wrapper):
     @property
     def not_in_schematic(self) -> bool:
         return self._proto.not_in_schematic
-    
+
     @not_in_schematic.setter
     def not_in_schematic(self, not_in_schematic: bool):
         self._proto.not_in_schematic = not_in_schematic
@@ -335,7 +544,7 @@ class FootprintAttributes(Wrapper):
     @property
     def exclude_from_bill_of_materials(self) -> bool:
         return self._proto.exclude_from_bill_of_materials
-    
+
     @exclude_from_bill_of_materials.setter
     def exclude_from_bill_of_materials(self, exclude: bool):
         self._proto.exclude_from_bill_of_materials = exclude
@@ -343,7 +552,7 @@ class FootprintAttributes(Wrapper):
     @property
     def exclude_from_position_files(self) -> bool:
         return self._proto.exclude_from_position_files
-    
+
     @exclude_from_position_files.setter
     def exclude_from_position_files(self, exclude: bool):
         self._proto.exclude_from_position_files = exclude
@@ -358,9 +567,26 @@ class Footprint(Wrapper):
             self._proto.CopyFrom(proto)
 
     @property
+    def id(self) -> LibraryIdentifier:
+        return LibraryIdentifier(proto_ref=self._proto.id)
+
+    @id.setter
+    def id(self, attributes: LibraryIdentifier):
+        self._proto.id.CopyFrom(attributes.proto)
+
+    @property
     def items(self) -> Sequence[Wrapper]:
         return [unwrap(item) for item in self._proto.items]
-    
+
+    def pads(self) -> Sequence[Pad]:
+        return [item for item in self.items if isinstance(item, Pad)]
+
+    def shapes(self) -> Sequence[Shape]:
+        return [item for item in self.items if isinstance(item, Shape)]
+
+    def texts(self) -> Sequence[Text]:
+        return [item for item in self.items if isinstance(item, Text)]
+
     def add_item(self, item: Wrapper):
         any = Any()
         any.Pack(item.proto)
@@ -377,11 +603,12 @@ class FootprintInstance(BoardItem):
     @property
     def id(self) -> KIID:
         return self._proto.id
-    
+
     @property
     def layer(self) -> BoardLayer.ValueType:
+        """The layer on which the footprint is placed (BoardLayer.BL_F_Cu or BoardLayer.BL_B_Cu)"""
         return self._proto.layer
-    
+
     @layer.setter
     def layer(self, layer: BoardLayer.ValueType):
         self._proto.layer = layer
@@ -389,19 +616,19 @@ class FootprintInstance(BoardItem):
     @property
     def definition(self) -> Footprint:
         return Footprint(proto_ref=self._proto.definition)
-    
+
     @property
     def reference_field(self) -> Field:
         return Field(proto_ref=self._proto.reference_field)
-    
+
     @property
     def value_field(self) -> Field:
         return Field(proto_ref=self._proto.value_field)
-    
+
     @property
     def attributes(self) -> FootprintAttributes:
         return FootprintAttributes(proto_ref=self._proto.attributes)
-    
+
 _proto_to_object: Dict[type[Message], type[Wrapper]] = {
     board_types_pb2.Arc: Arc,
     board_types_pb2.FootprintInstance: FootprintInstance,
@@ -410,6 +637,7 @@ _proto_to_object: Dict[type[Message], type[Wrapper]] = {
     board_types_pb2.Text: Text,
     board_types_pb2.Track: Track,
     board_types_pb2.Via: Via,
+    board_types_pb2.GraphicShape: Shape,
 }
 
 def unwrap(message: Any) -> Wrapper:

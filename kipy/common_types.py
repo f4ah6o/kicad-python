@@ -39,7 +39,35 @@ class TextAttributes(Wrapper):
     @property
     def visible(self) -> bool:
         return self._proto.visible
-    
+
     @visible.setter
     def visible(self, visible: bool):
         self._proto.visible = visible
+
+class LibraryIdentifier(Wrapper):
+    """A KiCad library identifier (LIB_ID), consisting of a library nickname and entry name"""
+    def __init__(self, proto: Optional[types.LibraryIdentifier] = None,
+                 proto_ref: Optional[types.LibraryIdentifier] = None):
+        self._proto = proto_ref if proto_ref is not None else types.LibraryIdentifier()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def library(self) -> str:
+        return self._proto.library_nickname
+
+    @library.setter
+    def library(self, library: str):
+        self._proto.library_nickname = library
+
+    @property
+    def name(self) -> str:
+        return self._proto.entry_name
+
+    @name.setter
+    def name(self, name: str):
+        self._proto.entry_name = name
+
+    def __str__(self) -> str:
+        return f"{self.library}:{self.name}"

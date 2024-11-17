@@ -20,14 +20,16 @@ from typing import List, Dict, Union, Iterable, Optional, Sequence, cast
 from google.protobuf.empty_pb2 import Empty
 
 from kipy.board_types import (
-    Arc,
+    ArcTrack,
     BoardItem,
     FootprintInstance,
     Net,
     Pad,
+    Shape,
     Text,
     Track,
     Via,
+    to_concrete_shape,
     unwrap
 )
 from kipy.client import ApiError, KiCadClient
@@ -54,7 +56,7 @@ from kipy.proto.board import board_commands_pb2
 
 # Re-exported protobuf enum types
 from kipy.proto.board.board_pb2 import (    # noqa
-    BoardLayerClass 
+    BoardLayerClass
 )
 from kipy.proto.board.board_types_pb2 import ( #noqa
     BoardLayer
@@ -64,14 +66,14 @@ class BoardLayerGraphicsDefaults(Wrapper):
     """Wraps a kiapi.board.types.BoardLayerGraphicsDefaults object"""
     def __init__(self, proto: Optional[board_pb2.BoardLayerGraphicsDefaults] = None):
         self._proto = board_pb2.BoardLayerGraphicsDefaults()
-    
+
         if proto is not None:
             self._proto.CopyFrom(proto)
 
     @property
     def text(self) -> TextAttributes:
         return TextAttributes(self._proto.text)
-        
+
 class Board:
     def __init__(self, kicad: KiCadClient, document: DocumentSpecifier):
         self._kicad = kicad
@@ -85,7 +87,7 @@ class Board:
     def name(self) -> str:
         """Returns the file name of the board"""
         return self._doc.board_filename
-    
+
     def save(self):
         pass
 
@@ -108,7 +110,7 @@ class Board:
         command.id.CopyFrom(commit.id)
         command.action = CommitAction.CMA_DROP
         self._kicad.send(command, EndCommitResponse)
-    
+
     def create_items(self, items: Union[Wrapper, Iterable[Wrapper]]) -> List[Wrapper]:
         command = CreateItems()
         command.header.document.CopyFrom(self._doc)
@@ -137,9 +139,9 @@ class Board:
 
         return [unwrap(item) for item in self._kicad.send(command, GetItemsResponse).items]
 
-    def get_tracks(self) -> Sequence[Union[Track, Arc]]:
+    def get_tracks(self) -> Sequence[Union[Track, ArcTrack]]:
         return [
-            cast(Track, item) if isinstance(item, Track) else cast(Arc, item)
+            cast(Track, item) if isinstance(item, Track) else cast(ArcTrack, item)
             for item in self.get_items(
                 types=[KiCadObjectType.KOT_PCB_TRACE, KiCadObjectType.KOT_PCB_ARC]
             )
@@ -147,16 +149,23 @@ class Board:
 
     def get_vias(self) -> Sequence[Via]:
         return [cast(Via, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_VIA])]
-    
+
     def get_pads(self) -> Sequence[Pad]:
         return [cast(Pad, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_PAD])]
-    
+
     def get_footprints(self) -> Sequence[FootprintInstance]:
         return [
             cast(FootprintInstance, item)
             for item in self.get_items(types=[KiCadObjectType.KOT_PCB_FOOTPRINT])
         ]
-    
+
+    def get_shapes(self) -> Sequence[Shape]:
+        """Retrieves all graphic shapes (not including tracks or text) on the board"""
+        return [
+            to_concrete_shape(cast(Shape, item))
+            for item in self.get_items(types=[KiCadObjectType.KOT_PCB_SHAPE])
+        ]
+
     def update_items(self, items: Union[BoardItem, Sequence[BoardItem]]):
         command = UpdateItems()
         command.header.document.CopyFrom(self._doc)
@@ -220,7 +229,7 @@ class Board:
         command = board_commands_pb2.GetBoardStackup()
         command.board.CopyFrom(self._doc)
         return self._kicad.send(command, board_commands_pb2.BoardStackupResponse).stackup
-    
+
     def get_graphics_defaults(self) -> Dict[int, BoardLayerGraphicsDefaults]:
         cmd = board_commands_pb2.GetGraphicsDefaults()
         cmd.board.CopyFrom(self._doc)
@@ -233,13 +242,13 @@ class Board:
             board_pb2.BoardLayerClass.BLC_FABRICATION: BoardLayerGraphicsDefaults(reply.defaults.layers[4]),
             board_pb2.BoardLayerClass.BLC_OTHER:       BoardLayerGraphicsDefaults(reply.defaults.layers[5])
         }
-    
+
     def get_text_extents(self, text: Text) -> Box2:
         cmd = board_commands_pb2.GetTextExtents()
         cmd.text.CopyFrom(text.proto)
         reply = self._kicad.send(cmd, BoundingBoxResponse)
         return Box2(reply.position, reply.size)
-    
+
     def interactive_move(self, items: Union[KIID, Iterable[KIID]]):
         cmd = board_commands_pb2.InteractiveMoveItems()
         cmd.board.CopyFrom(self._doc)
