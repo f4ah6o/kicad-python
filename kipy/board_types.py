@@ -31,6 +31,8 @@ from kipy.wrapper import Item, Wrapper
 # Re-exported protobuf enum types
 from kipy.proto.board.board_types_pb2 import ( #noqa
     BoardLayer,
+    ChamferedRectCorners,
+    DrillShape,
     PadType,
     PadStackShape,
     SolderMaskMode,
@@ -732,6 +734,14 @@ class PadStackLayer(Wrapper):
         self._proto.size.CopyFrom(size.proto)
 
     @property
+    def offset(self) -> Vector2:
+        return Vector2(self._proto.offset)
+
+    @offset.setter
+    def offset(self, offset: Vector2):
+        self._proto.offset.CopyFrom(offset.proto)
+
+    @property
     def corner_rounding_ratio(self) -> float:
         return self._proto.corner_rounding_ratio
 
@@ -823,6 +833,14 @@ class DrillProperties(Wrapper):
     def diameter(self, diameter: Vector2):
         self._proto.diameter.CopyFrom(diameter.proto)
 
+    @property
+    def shape(self) -> board_types_pb2.DrillShape.ValueType:
+        return self._proto.shape
+
+    @shape.setter
+    def shape(self, shape: board_types_pb2.DrillShape.ValueType):
+        self._proto.shape = shape
+
 
 class PadStackOuterLayer(Wrapper):
     def __init__(self, proto: Optional[board_types_pb2.PadStackOuterLayer] = None,
@@ -890,12 +908,8 @@ class PadStack(BoardItem):
         self._proto.layers.extend(layers)
 
     @property
-    def drill(self) -> board_types_pb2.DrillProperties:
-        return self._proto.drill
-
-    @drill.setter
-    def drill(self, drill: board_types_pb2.DrillProperties):
-        self._proto.drill.CopyFrom(drill)
+    def drill(self) -> DrillProperties:
+        return DrillProperties(proto_ref=self._proto.drill)
 
     @property
     def unconnected_layer_removal(self) -> UnconnectedLayerRemoval.ValueType:
@@ -906,13 +920,8 @@ class PadStack(BoardItem):
         self._proto.unconnected_layer_removal = removal
 
     @property
-    def copper_layers(self) -> Sequence[board_types_pb2.PadStackLayer]:
-        return self._proto.copper_layers
-
-    @copper_layers.setter
-    def copper_layers(self, layers: Sequence[board_types_pb2.PadStackLayer]):
-        del self._proto.copper_layers[:]
-        self._proto.copper_layers.extend(layers)
+    def copper_layers(self) -> list[PadStackLayer]:
+        return [PadStackLayer(proto_ref=p) for p in self._proto.copper_layers]
 
     @property
     def angle(self) -> Angle:
