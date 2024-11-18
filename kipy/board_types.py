@@ -1014,7 +1014,18 @@ class Footprint(Wrapper):
 
     def shapes(self) -> Sequence[Shape]:
         """Returns all graphic shapes in the footprint"""
-        return [item for item in self.items if isinstance(item, Shape)]
+        return [
+            item
+            for item in (
+                to_concrete_shape(shape)
+                for shape in [
+                    item
+                    for item in self.items
+                    if isinstance(item, Shape)
+                ]
+            )
+            if item is not None
+        ]
 
     def texts(self) -> Sequence[Text]:
         """Returns al free text objects in the footprint"""
