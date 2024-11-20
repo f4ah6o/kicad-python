@@ -120,6 +120,10 @@ class Box2:
     def from_pos_size(cls, pos: Vector2, size: Vector2):
         return cls(pos._proto, size._proto)
 
+    @classmethod
+    def from_proto( cls, other: types.Box2):
+        return cls(other.position, other.size)
+
     @property
     def pos(self) -> Vector2:
         return Vector2(self._pos_proto)
@@ -127,6 +131,10 @@ class Box2:
     @property
     def size(self) -> Vector2:
         return Vector2(self._size_proto)
+
+    def move(self, delta: Vector2):
+        self._pos_proto.x_nm += delta.x
+        self._pos_proto.y_nm += delta.y
 
     def merge(self, other: Union[Vector2, Box2]):
         if isinstance(other, Vector2):
@@ -237,6 +245,7 @@ class ArcStartMidEnd(Wrapper):
         self._proto.end.CopyFrom(val._proto)
 
     def bounding_box(self) -> Box2:
+        """Returns the bounding box of the arc -- not calculated by KiCad; may differ from KiCad's"""
         box = Box2()
         box.merge(self.start)
         box.merge(self.end)

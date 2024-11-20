@@ -35,12 +35,13 @@ from kipy.board_types import (
 from kipy.client import ApiError, KiCadClient
 from kipy.common_types import Commit, TextAttributes
 from kipy.geometry import Box2, PolygonWithHoles, Vector2
+from kipy.proto.common.commands import editor_commands_pb2
 from kipy.proto.common.envelope_pb2 import ApiStatusCode
 from kipy.util import pack_any
 from kipy.wrapper import Item, Wrapper
 
 from kipy.proto.common.commands import Ping
-from kipy.proto.common.types import DocumentSpecifier, KIID, KiCadObjectType
+from kipy.proto.common.types import DocumentSpecifier, KIID, KiCadObjectType, base_types_pb2
 from kipy.proto.common.commands.editor_commands_pb2 import (
     BeginCommit, BeginCommitResponse, CommitAction,
     EndCommit, EndCommitResponse,
@@ -48,7 +49,6 @@ from kipy.proto.common.commands.editor_commands_pb2 import (
     UpdateItems, UpdateItemsResponse,
     GetItems, GetItemsResponse,
     DeleteItems, DeleteItemsResponse,
-    BoundingBoxResponse,
     HitTest, HitTestResponse, HitTestResult
 )
 from kipy.proto.board import board_pb2
@@ -247,11 +247,54 @@ class Board:
             board_pb2.BoardLayerClass.BLC_OTHER:       BoardLayerGraphicsDefaults(reply.defaults.layers[5])
         }
 
+    @overload
+    def get_item_bounding_box(
+        self, items: BoardItem, include_text: bool = False
+    ) -> Optional[Box2]: ...
+
+    @overload
+    def get_item_bounding_box(
+        self, items: Sequence[BoardItem], include_text: bool = False
+    ) -> List[Optional[Box2]]: ...
+
+    def get_item_bounding_box(
+        self,
+        items: Union[BoardItem, Sequence[BoardItem]],
+        include_text: bool = False
+    ) -> Union[Optional[Box2], List[Optional[Box2]]]:
+        """Gets the KiCad-calculated bounding box for an item or items, returning None if the item
+        does not exist or has no bounding box"""
+        cmd = editor_commands_pb2.GetBoundingBox()
+        cmd.header.document.CopyFrom(self._doc)
+        cmd.mode = (
+            editor_commands_pb2.BoundingBoxMode.BBM_ITEM_AND_CHILD_TEXT
+            if include_text
+            else editor_commands_pb2.BoundingBoxMode.BBM_ITEM_ONLY
+        )
+
+        if isinstance(items, BoardItem):
+            cmd.items.append(items.id)
+        else:
+            cmd.items.extend([i.id for i in items])
+
+        response = self._kicad.send(cmd, editor_commands_pb2.GetBoundingBoxResponse)
+
+        if isinstance(items, BoardItem):
+            return Box2.from_proto(response.boxes[0]) if len(response.boxes) == 1 else None
+
+        item_to_bbox = {item: bbox for item, bbox in zip(response.items, response.boxes)}
+        return [
+            Box2.from_proto(box)
+            for box in (item_to_bbox.get(item.id, None) for item in items)
+            if box is not None
+        ]
+
+
     def get_text_extents(self, text: Text) -> Box2:
         cmd = board_commands_pb2.GetTextExtents()
         cmd.text.CopyFrom(text.proto)
-        reply = self._kicad.send(cmd, BoundingBoxResponse)
-        return Box2(reply.position, reply.size)
+        reply = self._kicad.send(cmd, base_types_pb2.Box2)
+        return Box2.from_proto(reply)
 
     @overload
     def get_pad_shapes_as_polygons(
