@@ -240,3 +240,78 @@ class Text(Wrapper):
     @attributes.setter
     def attributes(self, attributes: TextAttributes):
         self._proto.attributes.CopyFrom(attributes.proto)
+
+class TitleBlockInfo(Wrapper):
+    def __init__(self, proto: Optional[types.TitleBlockInfo] = None,
+                    proto_ref: Optional[types.TitleBlockInfo] = None):
+        self._proto = proto_ref if proto_ref is not None else types.TitleBlockInfo()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def title(self) -> str:
+        return self._proto.title
+
+    @title.setter
+    def title(self, title: str):
+        self._proto.title = title
+
+    @property
+    def date(self) -> str:
+        return self._proto.date
+
+    @date.setter
+    def date(self, date: str):
+        self._proto.date = date
+
+    @property
+    def revision(self) -> str:
+        return self._proto.revision
+
+    @revision.setter
+    def revision(self, revision: str):
+        self._proto.revision = revision
+
+    @property
+    def company(self) -> str:
+        return self._proto.company
+
+    @company.setter
+    def company(self, company: str):
+        self._proto.company = company
+
+    @property
+    def comments(self) -> dict[int, str]:
+        return {
+            1: self._proto.comment1,
+            2: self._proto.comment2,
+            3: self._proto.comment3,
+            4: self._proto.comment4,
+            5: self._proto.comment5,
+            6: self._proto.comment6,
+            7: self._proto.comment7,
+            8: self._proto.comment8,
+            9: self._proto.comment9
+        }
+
+    @comments.setter
+    def comments(self, comments: dict[int, str]):
+        if 1 in comments:
+            self._proto.comment1 = comments[1]
+        if 2 in comments:
+            self._proto.comment2 = comments[2]
+        if 3 in comments:
+            self._proto.comment3 = comments[3]
+        if 4 in comments:
+            self._proto.comment4 = comments[4]
+        if 5 in comments:
+            self._proto.comment5 = comments[5]
+        if 6 in comments:
+            self._proto.comment6 = comments[6]
+        if 7 in comments:
+            self._proto.comment7 = comments[7]
+        if 8 in comments:
+            self._proto.comment8 = comments[8]
+        if 9 in comments:
+            self._proto.comment9 = comments[9]

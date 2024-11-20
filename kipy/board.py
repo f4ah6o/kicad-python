@@ -33,7 +33,7 @@ from kipy.board_types import (
     unwrap
 )
 from kipy.client import ApiError, KiCadClient
-from kipy.common_types import Commit, TextAttributes
+from kipy.common_types import Commit, TitleBlockInfo, TextAttributes
 from kipy.geometry import Box2, PolygonWithHoles, Vector2
 from kipy.proto.common.commands import editor_commands_pb2
 from kipy.proto.common.envelope_pb2 import ApiStatusCode
@@ -246,6 +246,11 @@ class Board:
             board_pb2.BoardLayerClass.BLC_FABRICATION: BoardLayerGraphicsDefaults(reply.defaults.layers[4]),
             board_pb2.BoardLayerClass.BLC_OTHER:       BoardLayerGraphicsDefaults(reply.defaults.layers[5])
         }
+
+    def get_title_block_info(self) -> TitleBlockInfo:
+        cmd = editor_commands_pb2.GetTitleBlockInfo()
+        cmd.document.CopyFrom(self._doc)
+        return TitleBlockInfo(self._kicad.send(cmd, base_types_pb2.TitleBlockInfo))
 
     @overload
     def get_item_bounding_box(
