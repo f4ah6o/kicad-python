@@ -21,10 +21,10 @@ from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
 
 from kipy.proto.common.types import KIID
-from kipy.proto.common.types.base_types_pb2 import LockedState, PolygonWithHoles
+from kipy.proto.common.types.base_types_pb2 import LockedState
 from kipy.proto.board import board_types_pb2
 from kipy.common_types import GraphicAttributes, Text, LibraryIdentifier
-from kipy.geometry import Angle, Box2, Vector2
+from kipy.geometry import Angle, Box2, Vector2, PolygonWithHoles
 from kipy.util import unpack_any
 from kipy.wrapper import Item, Wrapper
 
@@ -474,24 +474,17 @@ class Polygon(Shape):
 
     @property
     def polygons(self) -> Sequence[PolygonWithHoles]:
-        return self._proto.polygon.polygons
-
-    @polygons.setter
-    def polygons(self, polygons: Sequence[PolygonWithHoles]):
-        del self._proto.polygon.polygons[:]
-        self._proto.polygon.polygons.extend(polygons)
+        return [PolygonWithHoles(proto_ref=p) for p in self._proto.polygon.polygons]
 
     def bounding_box(self) -> Box2:
         """Calculates the bounding box of the polygon"""
-        box = Box2()
+        box = None
         for polygon in self.polygons:
-            for node in polygon.outline.nodes:
-                if node.arc:
-                    box.merge(Vector2(node.arc.start))
-                    box.merge(Vector2(node.arc.end))
-                else:
-                    box.merge(Vector2(node.point))
-        return box
+            if box is None:
+                box = polygon.bounding_box()
+            else:
+                box.merge(polygon.bounding_box())
+        return box if box is not None else Box2()
 
 class Bezier(Shape):
     """Represents a graphic bezier curve on a board or footprint"""

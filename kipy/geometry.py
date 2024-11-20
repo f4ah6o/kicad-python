@@ -197,3 +197,194 @@ class Angle(Wrapper):
 
     def to_radians(self) -> float:
         return math.radians(self.degrees)
+
+class ArcStartMidEnd(Wrapper):
+    def __init__(
+        self,
+        proto: Optional[types.ArcStartMidEnd] = None,
+        proto_ref: Optional[types.ArcStartMidEnd] = None,
+    ):
+        self._proto = proto_ref if proto_ref is not None else types.ArcStartMidEnd()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    def __repr__(self):
+        return f"ArcStartMidEnd(start={self.start}, mid={self.mid}, end={self.end})"
+
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.start)
+
+    @start.setter
+    def start(self, val: Vector2):
+        self._proto.start.CopyFrom(val._proto)
+
+    @property
+    def mid(self) -> Vector2:
+        return Vector2(self._proto.mid)
+
+    @mid.setter
+    def mid(self, val: Vector2):
+        self._proto.mid.CopyFrom(val._proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.end)
+
+    @end.setter
+    def end(self, val: Vector2):
+        self._proto.end.CopyFrom(val._proto)
+
+    def bounding_box(self) -> Box2:
+        box = Box2()
+        box.merge(self.start)
+        box.merge(self.end)
+        box.merge(self.mid)
+        return box
+
+class PolyLineNode(Wrapper):
+    def __init__(
+        self,
+        proto: Optional[types.PolyLineNode] = None,
+        proto_ref: Optional[types.PolyLineNode] = None,
+    ):
+        self._proto = proto_ref if proto_ref is not None else types.PolyLineNode()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    def __repr__(self):
+        if self.has_point:
+            return f"PolyLineNode(point={self.point})"
+        elif self.has_arc:
+            return f"PolyLineNode(arc={self.arc})"
+        return "PolyLineNode()"
+
+    @property
+    def has_point(self) -> bool:
+        return self._proto.HasField("point")
+
+    @property
+    def point(self) -> Vector2:
+        return Vector2(self._proto.point)
+
+    @point.setter
+    def point(self, val: Vector2):
+        self._proto.point.CopyFrom(val._proto)
+
+    @property
+    def has_arc(self) -> bool:
+        return self._proto.HasField("arc")
+
+    @property
+    def arc(self) -> ArcStartMidEnd:
+        return ArcStartMidEnd(self._proto.arc)
+
+    @arc.setter
+    def arc(self, val: ArcStartMidEnd):
+        self._proto.arc.CopyFrom(val._proto)
+
+class PolyLine(Wrapper):
+    def __init__(
+        self,
+        proto: Optional[types.PolyLine] = None,
+        proto_ref: Optional[types.PolyLine] = None,
+    ):
+        self._proto = proto_ref if proto_ref is not None else types.PolyLine()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    def __repr__(self):
+        return f"PolyLine(nodes={self.nodes}, closed={self.closed})"
+
+    @property
+    def nodes(self) -> list[PolyLineNode]:
+        return [PolyLineNode(proto_ref=node) for node in self._proto.nodes]
+
+    @property
+    def closed(self) -> bool:
+        return self._proto.closed
+
+    @closed.setter
+    def closed(self, val: bool):
+        self._proto.closed = val
+
+    def __iter__(self):
+        return iter(self.nodes)
+
+    def __len__(self):
+        return len(self.nodes)
+
+    def __getitem__(self, index: int) -> PolyLineNode:
+        return self.nodes[index]
+
+    def __setitem__(self, index: int, value: PolyLineNode):
+        self._proto.nodes[index].CopyFrom(value._proto)
+
+    def append(self, node: PolyLineNode):
+        self._proto.nodes.append(node._proto)
+
+    def insert(self, index: int, node: PolyLineNode):
+        self._proto.nodes.insert(index, node._proto)
+
+    def remove(self, node: PolyLineNode):
+        self._proto.nodes.remove(node._proto)
+
+    def clear(self):
+        self._proto.ClearField("nodes")
+
+class PolygonWithHoles(Wrapper):
+    def __init__(
+        self,
+        proto: Optional[types.PolygonWithHoles] = None,
+        proto_ref: Optional[types.PolygonWithHoles] = None,
+    ):
+        self._proto = proto_ref if proto_ref is not None else types.PolygonWithHoles()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    def __repr__(self):
+        return f"PolygonWithHoles(outline={self.outline}, holes={self.holes})"
+
+    @property
+    def outline(self) -> PolyLine:
+        return PolyLine(proto_ref=self._proto.outline)
+
+    @property
+    def holes(self) -> list[PolyLine]:
+        return [PolyLine(proto_ref=hole) for hole in self._proto.holes]
+
+    def add_hole(self, hole: PolyLine):
+        self._proto.holes.append(hole._proto)
+
+    def remove_hole(self, hole: PolyLine):
+        self._proto.holes.remove(hole._proto)
+
+    def bounding_box(self) -> Box2:
+        if not self.outline.nodes:
+            return Box2()
+
+        min_x = int('inf')
+        min_y = int('inf')
+        max_x = int('-inf')
+        max_y = int('-inf')
+
+        for node in self.outline:
+            if node.has_point:
+                min_x = min(min_x, node.point.x)
+                min_y = min(min_y, node.point.y)
+                max_x = max(max_x, node.point.x)
+                max_y = max(max_y, node.point.y)
+            elif node.has_arc:
+                box = node.arc.bounding_box()
+                min_x = min(min_x, box.pos.x)
+                min_y = min(min_y, box.pos.y)
+                max_x = max(max_x, box.pos.x + box.size.x)
+                max_y = max(max_y, box.pos.y + box.size.y)
+
+        return Box2.from_pos_size(
+            Vector2.from_xy(min_x, min_y), Vector2.from_xy(max_x - min_x, max_y - min_y)
+        )
