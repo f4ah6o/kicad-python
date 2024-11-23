@@ -241,6 +241,60 @@ class Text(Wrapper):
     def attributes(self, attributes: TextAttributes):
         self._proto.attributes.CopyFrom(attributes.proto)
 
+class TextBox(Wrapper):
+    def __init__(self, proto: Optional[types.TextBox] = None,
+                    proto_ref: Optional[types.TextBox] = None):
+        self._proto = proto_ref if proto_ref is not None else types.TextBox()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def id(self) -> KIID:
+        return self._proto.id
+
+    @property
+    def top_left(self) -> Vector2:
+        return Vector2(self._proto.top_left)
+
+    @top_left.setter
+    def top_left(self, pos: Vector2):
+        self._proto.top_left.CopyFrom(pos.proto)
+
+    @property
+    def bottom_right(self) -> Vector2:
+        return Vector2(self._proto.bottom_right)
+
+    @bottom_right.setter
+    def bottom_right(self, pos: Vector2):
+        self._proto.bottom_right.CopyFrom(pos.proto)
+
+    @property
+    def attributes(self) -> TextAttributes:
+        return TextAttributes(proto_ref=self._proto.attributes)
+
+    @attributes.setter
+    def attributes(self, attributes: TextAttributes):
+        self._proto.attributes.CopyFrom(attributes.proto)
+
+    @property
+    def locked(self) -> bool:
+        return self._proto.locked == LockedState.LS_LOCKED
+
+    @locked.setter
+    def locked(self, locked: bool):
+        self._proto.locked = {
+            True: LockedState.LS_LOCKED,
+            False: LockedState.LS_UNLOCKED,
+        }.get(locked, LockedState.LS_UNLOCKED)
+
+    @property
+    def text(self) -> str:
+        return self._proto.text
+
+    @text.setter
+    def text(self, text: str):
+        self._proto.text = text
 class TitleBlockInfo(Wrapper):
     def __init__(self, proto: Optional[types.TitleBlockInfo] = None,
                     proto_ref: Optional[types.TitleBlockInfo] = None):

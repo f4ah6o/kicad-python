@@ -20,9 +20,10 @@ from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
 
 from kipy.proto.common.types import KIID
+from kipy.proto.common.types import base_types_pb2
 from kipy.proto.common.types.base_types_pb2 import LockedState
 from kipy.proto.board import board_types_pb2
-from kipy.common_types import GraphicAttributes, Text, LibraryIdentifier
+from kipy.common_types import GraphicAttributes, Text, TextAttributes, LibraryIdentifier
 from kipy.geometry import (
     Angle,
     Box2,
@@ -41,13 +42,18 @@ from kipy.proto.board.board_types_pb2 import ( #noqa
     BoardLayer,
     ChamferedRectCorners,
     DrillShape,
+    IslandRemovalMode,
     PadType,
     PadStackShape,
     SolderMaskMode,
     SolderPasteMode,
+    TeardropType,
     UnconnectedLayerRemoval,
+    ViaType,
+    ZoneBorderStyle,
     ZoneConnectionStyle,
-    ViaType
+    ZoneFillMode,
+    ZoneType,
 )
 
 class BoardItem(Item):
@@ -547,6 +553,63 @@ class BoardText(BoardItem):
     @property
     def text(self) -> Text:
         return Text(proto_ref=self._proto.text)
+
+class BoardTextBox(BoardItem):
+    """Represents a text box on a board"""
+    def __init__(self, proto: Optional[board_types_pb2.TextBox] = None):
+        self._proto = board_types_pb2.TextBox()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def layer(self) -> BoardLayer.ValueType:
+        return self._proto.layer
+
+    @layer.setter
+    def layer(self, layer: BoardLayer.ValueType):
+        self._proto.layer = layer
+
+    @property
+    def text(self) -> str:
+        return self._proto.textbox.text
+
+    @text.setter
+    def text(self, text: str):
+        self._proto.textbox.text = text
+
+    @property
+    def top_left(self) -> Vector2:
+        return Vector2(self._proto.textbox.top_left)
+
+    @top_left.setter
+    def top_left(self, position: Vector2):
+        self._proto.textbox.top_left.CopyFrom(position.proto)
+
+    @property
+    def bottom_right(self) -> Vector2:
+        return Vector2(self._proto.textbox.bottom_right)
+
+    @bottom_right.setter
+    def bottom_right(self, position: Vector2):
+        self._proto.textbox.bottom_right.CopyFrom(position.proto)
+
+    @property
+    def size(self) -> Vector2:
+        return self.bottom_right - self.top_left
+
+    @size.setter
+    def size(self, size: Vector2):
+        new_br = self.top_left + size
+        self._proto.textbox.bottom_right.CopyFrom(new_br.proto)
+
+    @property
+    def attributes(self) -> TextAttributes:
+        return TextAttributes(proto_ref=self._proto.textbox.attributes)
+
+    @attributes.setter
+    def attributes(self, attributes: GraphicAttributes):
+        self._proto.textbox.attributes.CopyFrom(attributes.proto)
 
 class Field(BoardItem):
     """Represents a footprint field"""
@@ -1142,16 +1205,171 @@ class FootprintInstance(BoardItem):
     def attributes(self) -> FootprintAttributes:
         return FootprintAttributes(proto_ref=self._proto.attributes)
 
+class ZoneFilledPolygons(Wrapper):
+    """Represents the set of filled polygons of a zone on a single board layer"""
+    def __init__(self, proto: Optional[board_types_pb2.ZoneFilledPolygons] = None,
+                    proto_ref: Optional[board_types_pb2.ZoneFilledPolygons] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.ZoneFilledPolygons()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def layer(self) -> BoardLayer.ValueType:
+        return self._proto.layer
+
+    @layer.setter
+    def layer(self, layer: BoardLayer.ValueType):
+        self._proto.layer = layer
+
+    @property
+    def shapes(self) -> Sequence[PolygonWithHoles]:
+        return [PolygonWithHoles(proto_ref=p) for p in self._proto.shapes.polygons]
+
+class Zone(BoardItem):
+    """Represents a copper, graphical, or rule area zone on a board"""
+    def __init__(self, proto: Optional[board_types_pb2.Zone] = None):
+        self._proto = board_types_pb2.Zone()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def type(self) -> ZoneType.ValueType:
+        return self._proto.type
+
+    @type.setter
+    def type(self, type: ZoneType.ValueType):
+        self._proto.type = type
+
+    @property
+    def layers(self) -> Sequence[BoardLayer.ValueType]:
+        return self._proto.layers
+
+    @layers.setter
+    def layers(self, layers: Sequence[BoardLayer.ValueType]):
+        del self._proto.layers[:]
+        self._proto.layers.extend(layers)
+
+    @property
+    def outline(self) -> PolygonWithHoles:
+        return PolygonWithHoles(proto_ref=self._proto.outline.polygons[0])
+
+    @outline.setter
+    def outline(self, outline: PolygonWithHoles):
+        p = base_types_pb2.PolygonWithHoles()
+        p.CopyFrom(outline.proto)
+        del self._proto.outline.polygons[:]
+        self._proto.outline.polygons.append(p)
+
+    @property
+    def name(self) -> str:
+        return self._proto.name
+
+    @name.setter
+    def name(self, name: str):
+        self._proto.name = name
+
+    @property
+    def priority(self) -> int:
+        return self._proto.priority
+
+    @priority.setter
+    def priority(self, priority: int):
+        self._proto.priority = priority
+
+    @property
+    def filled(self) -> bool:
+        return self._proto.filled
+
+    @filled.setter
+    def filled(self, filled: bool):
+        self._proto.filled = filled
+
+    @property
+    def locked(self) -> bool:
+        return self._proto.locked == LockedState.LS_LOCKED
+
+    @locked.setter
+    def locked(self, locked: bool):
+        self._proto.locked = LockedState.LS_LOCKED if locked else LockedState.LS_UNLOCKED
+
+    @property
+    def filled_polygons(self) -> dict[BoardLayer.ValueType, list[PolygonWithHoles]]:
+        return {
+            filled_polygon.layer: [
+                PolygonWithHoles(proto_ref=p) for p in filled_polygon.shapes.polygons
+            ]
+            for filled_polygon in self._proto.filled_polygons
+        }
+
+    def is_keepout(self) -> bool:
+        return self.type == ZoneType.ZT_RULE_AREA
+
+    @property
+    def connection(self) -> Optional[ZoneConnectionSettings]:
+        if self.is_keepout():
+            return None
+        return ZoneConnectionSettings(proto_ref=self._proto.copper_settings.connection)
+
+    @property
+    def clearance(self) -> Optional[int]:
+        if self.is_keepout():
+            return None
+        return self._proto.copper_settings.clearance.value_nm
+
+    @property
+    def min_thickness(self) -> Optional[int]:
+        if self.is_keepout():
+            return None
+        return self._proto.copper_settings.min_thickness.value_nm
+
+    @property
+    def island_mode(self) -> Optional[IslandRemovalMode.ValueType]:
+        if self.is_keepout():
+            return None
+        return self._proto.copper_settings.island_mode
+
+    @property
+    def min_island_area(self) -> Optional[int]:
+        if self.is_keepout():
+            return None
+        return self._proto.copper_settings.min_island_area
+
+    @property
+    def fill_mode(self) -> Optional[ZoneFillMode.ValueType]:
+        if self.is_keepout():
+            return None
+        return self._proto.copper_settings.fill_mode
+
+    @property
+    def net(self) -> Optional[Net]:
+        if self.is_keepout():
+            return None
+        return Net(self._proto.copper_settings.net)
+
+    @property
+    def teardrop(self) -> Optional[board_types_pb2.TeardropSettings]:
+        if self.is_keepout():
+            return None
+        return self._proto.copper_settings.teardrop
+
+    def bounding_box(self) -> Box2:
+        return self.outline.bounding_box()
+
+
 _proto_to_object: Dict[type[Message], type[Wrapper]] = {
     board_types_pb2.Arc: Arc,
     board_types_pb2.FootprintInstance: FootprintInstance,
     board_types_pb2.Net: Net,
     board_types_pb2.Pad: Pad,
     board_types_pb2.Text: BoardText,
+    board_types_pb2.TextBox: BoardTextBox,
     board_types_pb2.Track: Track,
     board_types_pb2.Via: Via,
     board_types_pb2.GraphicShape: Shape,
     board_types_pb2.Field: Field,
+    board_types_pb2.Zone: Zone,
 }
 
 def unwrap(message: Any) -> Wrapper:

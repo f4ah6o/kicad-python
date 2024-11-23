@@ -22,13 +22,15 @@ from google.protobuf.empty_pb2 import Empty
 from kipy.board_types import (
     ArcTrack,
     BoardItem,
+    BoardText,
+    BoardTextBox,
     FootprintInstance,
     Net,
     Pad,
     Shape,
-    Text,
     Track,
     Via,
+    Zone,
     to_concrete_shape,
     unwrap
 )
@@ -170,6 +172,17 @@ class Board:
             if item is not None
         ]
 
+    def get_text(self) -> Sequence[Union[BoardText, BoardTextBox]]:
+        return [
+            cast(BoardText, item) if isinstance(item, BoardText) else cast(BoardTextBox, item)
+            for item in self.get_items(
+                types=[KiCadObjectType.KOT_PCB_TEXT, KiCadObjectType.KOT_PCB_TEXTBOX]
+            )
+        ]
+
+    def get_zones(self) -> Sequence[Zone]:
+        return [cast(Zone, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_ZONE])]
+
     def update_items(self, items: Union[BoardItem, Sequence[BoardItem]]):
         command = UpdateItems()
         command.header.document.CopyFrom(self._doc)
@@ -295,7 +308,7 @@ class Board:
         ]
 
 
-    def get_text_extents(self, text: Text) -> Box2:
+    def get_text_extents(self, text: BoardText) -> Box2:
         cmd = board_commands_pb2.GetTextExtents()
         cmd.text.CopyFrom(text.proto)
         reply = self._kicad.send(cmd, base_types_pb2.Box2)
