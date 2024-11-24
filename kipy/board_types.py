@@ -38,7 +38,7 @@ from kipy.util import unpack_any
 from kipy.wrapper import Item, Wrapper
 
 # Re-exported protobuf enum types
-from kipy.proto.board.board_types_pb2 import ( #noqa
+from kipy.proto.board.board_types_pb2 import (  # noqa
     BoardLayer,
     ChamferedRectCorners,
     DrillShape,
@@ -56,10 +56,12 @@ from kipy.proto.board.board_types_pb2 import ( #noqa
     ZoneType,
 )
 
+
 class BoardItem(Item):
     @property
     def id(self):
         return self.proto.id
+
 
 class Net(Wrapper):
     def __init__(self, proto: Optional[board_types_pb2.Net] = None):
@@ -81,8 +83,10 @@ class Net(Wrapper):
             return self.code == other.code and self.name == other.name
         return NotImplemented
 
+
 class Track(BoardItem):
     """Represents a straight track segment"""
+
     def __init__(self, proto: Optional[board_types_pb2.Track] = None):
         self._proto = board_types_pb2.Track()
 
@@ -133,8 +137,10 @@ class Track(BoardItem):
         """Calculates track length in nanometers"""
         return (self.end - self.start).length()
 
+
 class ArcTrack(BoardItem):
     """Represents an arc track segment"""
+
     def __init__(self, proto: Optional[board_types_pb2.Arc] = None):
         self._proto = board_types_pb2.Arc()
 
@@ -226,8 +232,10 @@ class ArcTrack(BoardItem):
         box.merge(self.mid)
         return box
 
+
 class Shape(BoardItem):
     """Represents a graphic shape on a board or footprint"""
+
     def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
         self._proto = board_types_pb2.GraphicShape()
 
@@ -274,17 +282,21 @@ class Shape(BoardItem):
         self._proto.attributes.CopyFrom(attributes.proto)
 
     def bounding_box(self) -> Box2:
-        raise NotImplementedError(f"bounding_box() not implemented for {type(self).__name__}")
+        raise NotImplementedError(
+            f"bounding_box() not implemented for {type(self).__name__}"
+        )
+
 
 class Segment(Shape):
     """Represents a graphic line segment (not a track) on a board or footprint"""
+
     def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
         self._proto = board_types_pb2.GraphicShape()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
 
-        assert(self._proto.WhichOneof('geometry') == 'segment')
+        assert self._proto.WhichOneof("geometry") == "segment"
 
     @property
     def start(self) -> Vector2:
@@ -309,15 +321,17 @@ class Segment(Shape):
         box.merge(self.end)
         return box
 
+
 class Arc(Shape):
     """Represents a graphic arc (not a track) on a board or footprint"""
+
     def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
         self._proto = board_types_pb2.GraphicShape()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
 
-        assert(self._proto.WhichOneof('geometry') == 'arc')
+        assert self._proto.WhichOneof("geometry") == "arc"
 
     @property
     def start(self) -> Vector2:
@@ -380,15 +394,17 @@ class Arc(Shape):
         box.merge(self.mid)
         return box
 
+
 class Circle(Shape):
     """Represents a graphic circle on a board or footprint"""
+
     def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
         self._proto = board_types_pb2.GraphicShape()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
 
-        assert(self._proto.WhichOneof('geometry') == 'circle')
+        assert self._proto.WhichOneof("geometry") == "circle"
 
     @property
     def center(self) -> Vector2:
@@ -417,15 +433,17 @@ class Circle(Shape):
         box.inflate(int(self.radius() + 0.5))
         return box
 
+
 class Rectangle(Shape):
     """Represents a graphic rectangle on a board or footprint"""
+
     def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
         self._proto = board_types_pb2.GraphicShape()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
 
-        assert(self._proto.WhichOneof('geometry') == 'rectangle')
+        assert self._proto.WhichOneof("geometry") == "rectangle"
 
     @property
     def top_left(self) -> Vector2:
@@ -447,15 +465,17 @@ class Rectangle(Shape):
         """Calculates the bounding box of the rectangle"""
         return Box2.from_pos_size(self.top_left, self.bottom_right - self.top_left)
 
+
 class Polygon(Shape):
     """Represents a graphic polygon on a board or footprint"""
+
     def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
         self._proto = board_types_pb2.GraphicShape()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
 
-        assert(self._proto.WhichOneof('geometry') == 'polygon')
+        assert self._proto.WhichOneof("geometry") == "polygon"
 
     @property
     def polygons(self) -> Sequence[PolygonWithHoles]:
@@ -471,15 +491,17 @@ class Polygon(Shape):
                 box.merge(polygon.bounding_box())
         return box if box is not None else Box2()
 
+
 class Bezier(Shape):
     """Represents a graphic bezier curve on a board or footprint"""
+
     def __init__(self, proto: Optional[board_types_pb2.GraphicShape] = None):
         self._proto = board_types_pb2.GraphicShape()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
 
-        assert(self._proto.WhichOneof('geometry') == 'bezier')
+        assert self._proto.WhichOneof("geometry") == "bezier"
 
     @property
     def start(self) -> Vector2:
@@ -518,25 +540,31 @@ class Bezier(Shape):
         # bounding box from the curve approximation like KiCad does?
         raise NotImplementedError()
 
+
 def to_concrete_shape(
     shape: Shape,
 ) -> Union[Segment, Arc, Circle, Rectangle, Polygon, Bezier, None]:
     cls = {
-        'segment': Segment,
-        'arc': Arc,
-        'circle': Circle,
-        'rectangle': Rectangle,
-        'polygon': Polygon,
-        'bezier': Bezier,
-        None: None
-    }.get(shape._proto.WhichOneof('geometry'), None)
+        "segment": Segment,
+        "arc": Arc,
+        "circle": Circle,
+        "rectangle": Rectangle,
+        "polygon": Polygon,
+        "bezier": Bezier,
+        None: None,
+    }.get(shape._proto.WhichOneof("geometry"), None)
 
     return cls(shape._proto) if cls is not None else None
 
+
 class BoardText(BoardItem):
     """Represents a free text object, or the text component of a field"""
-    def __init__(self, proto: Optional[board_types_pb2.Text] = None,
-                 proto_ref: Optional[board_types_pb2.Text] = None):
+
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.Text] = None,
+        proto_ref: Optional[board_types_pb2.Text] = None,
+    ):
         self._proto = proto_ref if proto_ref is not None else board_types_pb2.Text()
 
         if proto is not None:
@@ -554,8 +582,10 @@ class BoardText(BoardItem):
     def text(self) -> Text:
         return Text(proto_ref=self._proto.text)
 
+
 class BoardTextBox(BoardItem):
     """Represents a text box on a board"""
+
     def __init__(self, proto: Optional[board_types_pb2.TextBox] = None):
         self._proto = board_types_pb2.TextBox()
 
@@ -611,10 +641,15 @@ class BoardTextBox(BoardItem):
     def attributes(self, attributes: GraphicAttributes):
         self._proto.textbox.attributes.CopyFrom(attributes.proto)
 
+
 class Field(BoardItem):
     """Represents a footprint field"""
-    def __init__(self, proto: Optional[board_types_pb2.Field] = None,
-                 proto_ref: Optional[board_types_pb2.Field] = None):
+
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.Field] = None,
+        proto_ref: Optional[board_types_pb2.Field] = None,
+    ):
         self._proto = proto_ref if proto_ref is not None else board_types_pb2.Field()
 
         if proto is not None:
@@ -640,9 +675,13 @@ class Field(BoardItem):
     def text(self) -> Text:
         return Text(proto_ref=self._proto.text.text)
 
+
 class ZoneConnectionSettings(Wrapper):
-    def __init__(self, proto: Optional[board_types_pb2.ZoneConnectionSettings] = None,
-                 proto_ref: Optional[board_types_pb2.ZoneConnectionSettings] = None):
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.ZoneConnectionSettings] = None,
+        proto_ref: Optional[board_types_pb2.ZoneConnectionSettings] = None,
+    ):
         self._proto = (
             proto_ref
             if proto_ref is not None
@@ -664,10 +703,18 @@ class ZoneConnectionSettings(Wrapper):
     def thermal_spokes(self) -> board_types_pb2.ThermalSpokeSettings:
         return self._proto.thermal_spokes
 
+
 class SolderMaskOverrides(Wrapper):
-    def __init__(self, proto: Optional[board_types_pb2.SolderMaskOverrides] = None,
-                 proto_ref: Optional[board_types_pb2.SolderMaskOverrides] = None):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.SolderMaskOverrides()
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.SolderMaskOverrides] = None,
+        proto_ref: Optional[board_types_pb2.SolderMaskOverrides] = None,
+    ):
+        self._proto = (
+            proto_ref
+            if proto_ref is not None
+            else board_types_pb2.SolderMaskOverrides()
+        )
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -680,10 +727,18 @@ class SolderMaskOverrides(Wrapper):
     def solder_mask_margin(self, margin_nm: int):
         self._proto.solder_mask_margin.value_nm = margin_nm
 
+
 class SolderPasteOverrides(Wrapper):
-    def __init__(self, proto: Optional[board_types_pb2.SolderPasteOverrides] = None,
-                 proto_ref: Optional[board_types_pb2.SolderPasteOverrides] = None):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.SolderPasteOverrides()
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.SolderPasteOverrides] = None,
+        proto_ref: Optional[board_types_pb2.SolderPasteOverrides] = None,
+    ):
+        self._proto = (
+            proto_ref
+            if proto_ref is not None
+            else board_types_pb2.SolderPasteOverrides()
+        )
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -704,10 +759,16 @@ class SolderPasteOverrides(Wrapper):
     def solder_paste_margin_ratio(self, ratio: float):
         self._proto.solder_paste_margin_ratio.value = ratio
 
+
 class PadStackLayer(Wrapper):
-    def __init__(self, proto: Optional[board_types_pb2.PadStackLayer] = None,
-                 proto_ref: Optional[board_types_pb2.PadStackLayer] = None):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.PadStackLayer()
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.PadStackLayer] = None,
+        proto_ref: Optional[board_types_pb2.PadStackLayer] = None,
+    ):
+        self._proto = (
+            proto_ref if proto_ref is not None else board_types_pb2.PadStackLayer()
+        )
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -803,10 +864,16 @@ class PadStackLayer(Wrapper):
     def zone_settings(self, settings: board_types_pb2.ZoneConnectionSettings):
         self._proto.zone_settings.CopyFrom(settings)
 
+
 class DrillProperties(Wrapper):
-    def __init__(self, proto: Optional[board_types_pb2.DrillProperties] = None,
-                 proto_ref: Optional[board_types_pb2.DrillProperties] = None):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.DrillProperties()
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.DrillProperties] = None,
+        proto_ref: Optional[board_types_pb2.DrillProperties] = None,
+    ):
+        self._proto = (
+            proto_ref if proto_ref is not None else board_types_pb2.DrillProperties()
+        )
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -846,9 +913,14 @@ class DrillProperties(Wrapper):
 
 
 class PadStackOuterLayer(Wrapper):
-    def __init__(self, proto: Optional[board_types_pb2.PadStackOuterLayer] = None,
-                 proto_ref: Optional[board_types_pb2.PadStackOuterLayer] = None):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.PadStackOuterLayer()
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.PadStackOuterLayer] = None,
+        proto_ref: Optional[board_types_pb2.PadStackOuterLayer] = None,
+    ):
+        self._proto = (
+            proto_ref if proto_ref is not None else board_types_pb2.PadStackOuterLayer()
+        )
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -885,9 +957,13 @@ class PadStackOuterLayer(Wrapper):
     def solder_paste_settings(self, settings: SolderPasteOverrides):
         self._proto.solder_paste_settings.CopyFrom(settings.proto)
 
+
 class PadStack(BoardItem):
-    def __init__(self, proto: Optional[board_types_pb2.PadStack] = None,
-                 proto_ref: Optional[board_types_pb2.PadStack] = None):
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.PadStack] = None,
+        proto_ref: Optional[board_types_pb2.PadStack] = None,
+    ):
         self._proto = proto_ref if proto_ref is not None else board_types_pb2.PadStack()
 
         if proto is not None:
@@ -959,14 +1035,15 @@ class PadStack(BoardItem):
         """
         if layer == BoardLayer.BL_UNDEFINED:
             return (
-            self.front_outer_layers.solder_mask_mode == SolderMaskMode.SMM_MASKED or
-            self.back_outer_layers.solder_mask_mode == SolderMaskMode.SMM_MASKED
+                self.front_outer_layers.solder_mask_mode == SolderMaskMode.SMM_MASKED
+                or self.back_outer_layers.solder_mask_mode == SolderMaskMode.SMM_MASKED
             )
         elif layer == BoardLayer.BL_F_Cu:
             return self.front_outer_layers.solder_mask_mode == SolderMaskMode.SMM_MASKED
         elif layer == BoardLayer.BL_B_Cu:
             return self.back_outer_layers.solder_mask_mode == SolderMaskMode.SMM_MASKED
         return False
+
 
 class Pad(BoardItem):
     def __init__(self, proto: Optional[board_types_pb2.Pad] = None):
@@ -1011,6 +1088,7 @@ class Pad(BoardItem):
     def padstack(self) -> PadStack:
         return PadStack(proto_ref=self._proto.pad_stack)
 
+
 class Via(BoardItem):
     def __init__(self, proto: Optional[board_types_pb2.Via] = None):
         self._proto = board_types_pb2.Via()
@@ -1040,7 +1118,9 @@ class Via(BoardItem):
 
     @locked.setter
     def locked(self, locked: bool):
-        self._proto.locked = LockedState.LS_LOCKED if locked else LockedState.LS_UNLOCKED
+        self._proto.locked = (
+            LockedState.LS_LOCKED if locked else LockedState.LS_UNLOCKED
+        )
 
     @property
     def type(self) -> ViaType.ValueType:
@@ -1054,11 +1134,20 @@ class Via(BoardItem):
     def padstack(self) -> PadStack:
         return PadStack(proto_ref=self._proto.pad_stack)
 
+
 class FootprintAttributes(Wrapper):
     """The built-in attributes that a Footprint or FootprintInstance may have"""
-    def __init__(self, proto: Optional[board_types_pb2.FootprintAttributes] = None,
-                 proto_ref: Optional[board_types_pb2.FootprintAttributes] = None):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.FootprintAttributes()
+
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.FootprintAttributes] = None,
+        proto_ref: Optional[board_types_pb2.FootprintAttributes] = None,
+    ):
+        self._proto = (
+            proto_ref
+            if proto_ref is not None
+            else board_types_pb2.FootprintAttributes()
+        )
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -1087,11 +1176,18 @@ class FootprintAttributes(Wrapper):
     def exclude_from_position_files(self, exclude: bool):
         self._proto.exclude_from_position_files = exclude
 
+
 class Footprint(Wrapper):
     """Represents a library footprint"""
-    def __init__(self, proto: Optional[board_types_pb2.Footprint] = None,
-                 proto_ref: Optional[board_types_pb2.Footprint] = None):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Footprint()
+
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.Footprint] = None,
+        proto_ref: Optional[board_types_pb2.Footprint] = None,
+    ):
+        self._proto = (
+            proto_ref if proto_ref is not None else board_types_pb2.Footprint()
+        )
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -1118,11 +1214,7 @@ class Footprint(Wrapper):
             item
             for item in (
                 to_concrete_shape(shape)
-                for shape in [
-                    item
-                    for item in self.items
-                    if isinstance(item, Shape)
-                ]
+                for shape in [item for item in self.items if isinstance(item, Shape)]
             )
             if item is not None
         ]
@@ -1136,8 +1228,10 @@ class Footprint(Wrapper):
         any.Pack(item.proto)
         self._proto.items.append(any)
 
+
 class FootprintInstance(BoardItem):
     """Represents a footprint instance on a board"""
+
     def __init__(self, proto: Optional[board_types_pb2.FootprintInstance] = None):
         self._proto = board_types_pb2.FootprintInstance()
 
@@ -1179,7 +1273,9 @@ class FootprintInstance(BoardItem):
 
     @locked.setter
     def locked(self, locked: bool):
-        self._proto.locked = LockedState.LS_LOCKED if locked else LockedState.LS_UNLOCKED
+        self._proto.locked = (
+            LockedState.LS_LOCKED if locked else LockedState.LS_UNLOCKED
+        )
 
     @property
     def definition(self) -> Footprint:
@@ -1205,11 +1301,18 @@ class FootprintInstance(BoardItem):
     def attributes(self) -> FootprintAttributes:
         return FootprintAttributes(proto_ref=self._proto.attributes)
 
+
 class ZoneFilledPolygons(Wrapper):
     """Represents the set of filled polygons of a zone on a single board layer"""
-    def __init__(self, proto: Optional[board_types_pb2.ZoneFilledPolygons] = None,
-                    proto_ref: Optional[board_types_pb2.ZoneFilledPolygons] = None):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.ZoneFilledPolygons()
+
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.ZoneFilledPolygons] = None,
+        proto_ref: Optional[board_types_pb2.ZoneFilledPolygons] = None,
+    ):
+        self._proto = (
+            proto_ref if proto_ref is not None else board_types_pb2.ZoneFilledPolygons()
+        )
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -1226,8 +1329,10 @@ class ZoneFilledPolygons(Wrapper):
     def shapes(self) -> Sequence[PolygonWithHoles]:
         return [PolygonWithHoles(proto_ref=p) for p in self._proto.shapes.polygons]
 
+
 class Zone(BoardItem):
     """Represents a copper, graphical, or rule area zone on a board"""
+
     def __init__(self, proto: Optional[board_types_pb2.Zone] = None):
         self._proto = board_types_pb2.Zone()
 
@@ -1292,7 +1397,9 @@ class Zone(BoardItem):
 
     @locked.setter
     def locked(self, locked: bool):
-        self._proto.locked = LockedState.LS_LOCKED if locked else LockedState.LS_UNLOCKED
+        self._proto.locked = (
+            LockedState.LS_LOCKED if locked else LockedState.LS_UNLOCKED
+        )
 
     @property
     def filled_polygons(self) -> dict[BoardLayer.ValueType, list[PolygonWithHoles]]:
@@ -1303,54 +1410,54 @@ class Zone(BoardItem):
             for filled_polygon in self._proto.filled_polygons
         }
 
-    def is_keepout(self) -> bool:
+    def is_rule_area(self) -> bool:
         return self.type == ZoneType.ZT_RULE_AREA
 
     @property
     def connection(self) -> Optional[ZoneConnectionSettings]:
-        if self.is_keepout():
+        if self.is_rule_area():
             return None
         return ZoneConnectionSettings(proto_ref=self._proto.copper_settings.connection)
 
     @property
     def clearance(self) -> Optional[int]:
-        if self.is_keepout():
+        if self.is_rule_area():
             return None
         return self._proto.copper_settings.clearance.value_nm
 
     @property
     def min_thickness(self) -> Optional[int]:
-        if self.is_keepout():
+        if self.is_rule_area():
             return None
         return self._proto.copper_settings.min_thickness.value_nm
 
     @property
     def island_mode(self) -> Optional[IslandRemovalMode.ValueType]:
-        if self.is_keepout():
+        if self.is_rule_area():
             return None
         return self._proto.copper_settings.island_mode
 
     @property
     def min_island_area(self) -> Optional[int]:
-        if self.is_keepout():
+        if self.is_rule_area():
             return None
         return self._proto.copper_settings.min_island_area
 
     @property
     def fill_mode(self) -> Optional[ZoneFillMode.ValueType]:
-        if self.is_keepout():
+        if self.is_rule_area():
             return None
         return self._proto.copper_settings.fill_mode
 
     @property
     def net(self) -> Optional[Net]:
-        if self.is_keepout():
+        if self.is_rule_area():
             return None
         return Net(self._proto.copper_settings.net)
 
     @property
     def teardrop(self) -> Optional[board_types_pb2.TeardropSettings]:
-        if self.is_keepout():
+        if self.is_rule_area():
             return None
         return self._proto.copper_settings.teardrop
 
@@ -1372,8 +1479,9 @@ _proto_to_object: Dict[type[Message], type[Wrapper]] = {
     board_types_pb2.Zone: Zone,
 }
 
+
 def unwrap(message: Any) -> Wrapper:
     concrete = unpack_any(message)
     wrapper = _proto_to_object.get(type(concrete), None)
-    assert(wrapper is not None)
+    assert wrapper is not None
     return wrapper(concrete)
