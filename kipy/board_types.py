@@ -1608,7 +1608,7 @@ class Zone(BoardItem):
 
 
 _proto_to_object: Dict[type[Message], type[Wrapper]] = {
-    board_types_pb2.Arc: Arc,
+    board_types_pb2.Arc: ArcTrack,
     board_types_pb2.FootprintInstance: FootprintInstance,
     board_types_pb2.Net: Net,
     board_types_pb2.Pad: Pad,
