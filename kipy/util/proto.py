@@ -19,6 +19,7 @@ from google.protobuf.any_pb2 import Any
 from google.protobuf.message import Message
 
 from kipy.proto.board import board_types_pb2
+from kipy.proto.common.types import base_types_pb2
 
 def pack_any(object: Message) -> Any:
     a = Any()
@@ -26,12 +27,14 @@ def pack_any(object: Message) -> Any:
     return a
 
 _any_urls = {
+    "type.googleapis.com/kiapi.common.types.GraphicShape": base_types_pb2.GraphicShape,
+
     "type.googleapis.com/kiapi.board.types.Track": board_types_pb2.Track,
     "type.googleapis.com/kiapi.board.types.Arc": board_types_pb2.Arc,
     "type.googleapis.com/kiapi.board.types.Via": board_types_pb2.Via,
     "type.googleapis.com/kiapi.board.types.Text": board_types_pb2.Text,
     "type.googleapis.com/kiapi.board.types.TextBox": board_types_pb2.TextBox,
-    "type.googleapis.com/kiapi.board.types.GraphicShape": board_types_pb2.GraphicShape,
+    "type.googleapis.com/kiapi.board.types.BoardGraphicShape": board_types_pb2.BoardGraphicShape,
     "type.googleapis.com/kiapi.board.types.Pad": board_types_pb2.Pad,
     "type.googleapis.com/kiapi.board.types.Zone": board_types_pb2.Zone,
     "type.googleapis.com/kiapi.board.types.Dimension": board_types_pb2.Dimension,
