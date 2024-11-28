@@ -37,7 +37,7 @@ from kipy.board_types import (
 from kipy.client import ApiError, KiCadClient
 from kipy.common_types import Commit, TitleBlockInfo, TextAttributes
 from kipy.geometry import Box2, PolygonWithHoles, Vector2
-from kipy.proto.common.commands import editor_commands_pb2
+from kipy.proto.common.commands import base_commands_pb2, editor_commands_pb2
 from kipy.proto.common.envelope_pb2 import ApiStatusCode
 from kipy.util import pack_any
 from kipy.wrapper import Item, Wrapper
@@ -309,7 +309,7 @@ class Board:
 
 
     def get_text_extents(self, text: BoardText) -> Box2:
-        cmd = board_commands_pb2.GetTextExtents()
+        cmd = base_commands_pb2.GetTextExtents()
         cmd.text.CopyFrom(text.proto)
         reply = self._kicad.send(cmd, base_types_pb2.Box2)
         return Box2.from_proto(reply)

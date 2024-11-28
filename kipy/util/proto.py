@@ -16,7 +16,7 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from google.protobuf.any_pb2 import Any
-from google.protobuf.message import Message
+from google.protobuf.message import Message, DecodeError
 
 from kipy.proto.board import board_types_pb2
 from kipy.proto.common.types import base_types_pb2
@@ -32,8 +32,8 @@ _any_urls = {
     "type.googleapis.com/kiapi.board.types.Track": board_types_pb2.Track,
     "type.googleapis.com/kiapi.board.types.Arc": board_types_pb2.Arc,
     "type.googleapis.com/kiapi.board.types.Via": board_types_pb2.Via,
-    "type.googleapis.com/kiapi.board.types.Text": board_types_pb2.Text,
-    "type.googleapis.com/kiapi.board.types.TextBox": board_types_pb2.TextBox,
+    "type.googleapis.com/kiapi.board.types.BoardText": board_types_pb2.BoardText,
+    "type.googleapis.com/kiapi.board.types.BoardTextBox": board_types_pb2.BoardTextBox,
     "type.googleapis.com/kiapi.board.types.BoardGraphicShape": board_types_pb2.BoardGraphicShape,
     "type.googleapis.com/kiapi.board.types.Pad": board_types_pb2.Pad,
     "type.googleapis.com/kiapi.board.types.Zone": board_types_pb2.Zone,
@@ -51,8 +51,11 @@ def unpack_any(object: Any) -> Message:
 
     type = _any_urls.get(object.type_url, None)
     if type is None:
-        raise NotImplementedError(f"{object.type_url} can't be unpacked")
+        raise NotImplementedError(f"Missing type mapping for {object.type_url}, can't unpack it")
 
     concrete = type()
-    object.Unpack(concrete)
+    try:
+        object.Unpack(concrete)
+    except DecodeError:
+        raise ValueError(f"Can't unpack {object.type_url}.  Incompatible change on KiCad side?") from None
     return concrete

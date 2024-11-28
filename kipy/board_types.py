@@ -245,15 +245,15 @@ class Shape(BoardItem):
 
     @property
     def id(self) -> KIID:
-        return self._proto.shape.id
+        return self._proto.id
 
     @property
     def locked(self) -> bool:
-        return self._proto.shape.locked == LockedState.LS_LOCKED
+        return self._proto.locked == LockedState.LS_LOCKED
 
     @locked.setter
     def locked(self, locked: bool):
-        self._proto.shape.locked = {
+        self._proto.locked = {
             True: LockedState.LS_LOCKED,
             False: LockedState.LS_UNLOCKED,
         }.get(locked, LockedState.LS_UNLOCKED)
@@ -544,7 +544,7 @@ class Bezier(Shape):
 
 def to_concrete_shape(
     shape: Shape,
-) -> Union[Segment, Arc, Circle, Rectangle, Polygon, Bezier, None]:
+) -> Optional[Union[Segment, Arc, Circle, Rectangle, Polygon, Bezier]]:
     cls = {
         "segment": Segment,
         "arc": Arc,
@@ -563,10 +563,10 @@ class BoardText(BoardItem):
 
     def __init__(
         self,
-        proto: Optional[board_types_pb2.Text] = None,
-        proto_ref: Optional[board_types_pb2.Text] = None,
+        proto: Optional[board_types_pb2.BoardText] = None,
+        proto_ref: Optional[board_types_pb2.BoardText] = None,
     ):
-        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Text()
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardText()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -581,7 +581,7 @@ class BoardText(BoardItem):
 
     @property
     def id(self) -> KIID:
-        return self._proto.text.id
+        return self._proto.id
 
     @property
     def position(self) -> Vector2:
@@ -593,11 +593,11 @@ class BoardText(BoardItem):
 
     @property
     def locked(self) -> bool:
-        return self._proto.text.locked == LockedState.LS_LOCKED
+        return self._proto.locked == LockedState.LS_LOCKED
 
     @locked.setter
     def locked(self, locked: bool):
-        self._proto.text.locked = {
+        self._proto.locked = {
             True: LockedState.LS_LOCKED,
             False: LockedState.LS_UNLOCKED,
         }.get(locked, LockedState.LS_UNLOCKED)
@@ -621,8 +621,9 @@ class BoardText(BoardItem):
 class BoardTextBox(BoardItem):
     """Represents a text box on a board"""
 
-    def __init__(self, proto: Optional[board_types_pb2.TextBox] = None):
-        self._proto = board_types_pb2.TextBox()
+    def __init__(self, proto: Optional[board_types_pb2.BoardTextBox] = None,
+                 proto_ref: Optional[board_types_pb2.BoardTextBox] = None,):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardTextBox()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -637,11 +638,11 @@ class BoardTextBox(BoardItem):
 
     @property
     def locked(self) -> bool:
-        return self._proto.textbox.locked == LockedState.LS_LOCKED
+        return self._proto.locked == LockedState.LS_LOCKED
 
     @locked.setter
     def locked(self, locked: bool):
-        self._proto.textbox.locked = {
+        self._proto.locked = {
             True: LockedState.LS_LOCKED,
             False: LockedState.LS_UNLOCKED,
         }.get(locked, LockedState.LS_UNLOCKED)
@@ -1612,8 +1613,8 @@ _proto_to_object: Dict[type[Message], type[Wrapper]] = {
     board_types_pb2.FootprintInstance: FootprintInstance,
     board_types_pb2.Net: Net,
     board_types_pb2.Pad: Pad,
-    board_types_pb2.Text: BoardText,
-    board_types_pb2.TextBox: BoardTextBox,
+    board_types_pb2.BoardText: BoardText,
+    board_types_pb2.BoardTextBox: BoardTextBox,
     board_types_pb2.Track: Track,
     board_types_pb2.Via: Via,
     board_types_pb2.BoardGraphicShape: Shape,

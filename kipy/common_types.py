@@ -17,7 +17,7 @@
 
 from typing import Optional
 from kipy.proto.common import types
-from kipy.proto.common.types.base_types_pb2 import KIID, LockedState
+from kipy.proto.common.types.base_types_pb2 import KIID
 from kipy.geometry import Vector2
 from kipy.wrapper import Wrapper
 
@@ -313,27 +313,12 @@ class Text(Wrapper):
             self._proto.CopyFrom(proto)
 
     @property
-    def id(self) -> KIID:
-        return self._proto.id
-
-    @property
     def position(self) -> Vector2:
         return Vector2(self._proto.position)
 
     @position.setter
     def position(self, pos: Vector2):
         self._proto.position.CopyFrom(pos.proto)
-
-    @property
-    def locked(self) -> bool:
-        return self._proto.locked == LockedState.LS_LOCKED
-
-    @locked.setter
-    def locked(self, locked: bool):
-        self._proto.locked = {
-            True: LockedState.LS_LOCKED,
-            False: LockedState.LS_UNLOCKED,
-        }.get(locked, LockedState.LS_UNLOCKED)
 
     @property
     def value(self) -> str:
@@ -360,10 +345,6 @@ class TextBox(Wrapper):
             self._proto.CopyFrom(proto)
 
     @property
-    def id(self) -> KIID:
-        return self._proto.id
-
-    @property
     def top_left(self) -> Vector2:
         return Vector2(self._proto.top_left)
 
@@ -386,17 +367,6 @@ class TextBox(Wrapper):
     @attributes.setter
     def attributes(self, attributes: TextAttributes):
         self._proto.attributes.CopyFrom(attributes.proto)
-
-    @property
-    def locked(self) -> bool:
-        return self._proto.locked == LockedState.LS_LOCKED
-
-    @locked.setter
-    def locked(self, locked: bool):
-        self._proto.locked = {
-            True: LockedState.LS_LOCKED,
-            False: LockedState.LS_UNLOCKED,
-        }.get(locked, LockedState.LS_UNLOCKED)
 
     @property
     def text(self) -> str:
