@@ -37,7 +37,8 @@ from kipy.board_types import (
 from kipy.client import ApiError, KiCadClient
 from kipy.common_types import Commit, TitleBlockInfo, TextAttributes
 from kipy.geometry import Box2, PolygonWithHoles, Vector2
-from kipy.proto.common.commands import editor_commands_pb2
+from kipy.project import Project
+from kipy.proto.common.commands import editor_commands_pb2, project_commands_pb2
 from kipy.proto.common.envelope_pb2 import ApiStatusCode
 from kipy.util import pack_any
 from kipy.wrapper import Item, Wrapper
@@ -88,6 +89,9 @@ class Board:
     @property
     def document(self) -> DocumentSpecifier:
         return self._doc
+
+    def project(self) -> Project:
+        return Project(self._kicad, self._doc)
 
     @property
     def name(self) -> str:
@@ -268,6 +272,30 @@ class Board:
         cmd = editor_commands_pb2.GetTitleBlockInfo()
         cmd.document.CopyFrom(self._doc)
         return TitleBlockInfo(self._kicad.send(cmd, base_types_pb2.TitleBlockInfo))
+
+    @overload
+    def expand_text_variables(self, text: str) -> str:
+        ...
+
+    @overload
+    def expand_text_variables(self, text: List[str]) -> List[str]:
+        ...
+
+    def expand_text_variables(self, text: Union[str, List[str]]) -> Union[str, List[str]]:
+        command = project_commands_pb2.ExpandTextVariables()
+        command.document.CopyFrom(self._doc)
+        if isinstance(text, list):
+            command.text.extend(text)
+        else:
+            command.text.append(text)
+        response = self._kicad.send(command, project_commands_pb2.ExpandTextVariablesResponse)
+        return (
+            [text for text in response.text]
+            if isinstance(text, list)
+            else response.text[0]
+            if len(response.text) > 0
+            else ""
+        )
 
     @overload
     def get_item_bounding_box(
