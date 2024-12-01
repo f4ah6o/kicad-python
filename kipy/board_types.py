@@ -1428,19 +1428,368 @@ class Zone(BoardItem):
         return self.outline.bounding_box()
 
 
+class Dimension(BoardItem):
+    """Represents a dimension object on a board"""
+
+    def __init__(self, proto: Optional[board_types_pb2.Dimension] = None):
+        self._proto = board_types_pb2.Dimension()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def id(self) -> KIID:
+        return self._proto.id
+
+    @property
+    def locked(self) -> bool:
+        return self._proto.locked == LockedState.LS_LOCKED
+
+    @locked.setter
+    def locked(self, locked: bool):
+        self._proto.locked = LockedState.LS_LOCKED if locked else LockedState.LS_UNLOCKED
+
+    @property
+    def layer(self) -> BoardLayer.ValueType:
+        return self._proto.layer
+
+    @layer.setter
+    def layer(self, layer: BoardLayer.ValueType):
+        self._proto.layer = layer
+
+    @property
+    def text(self) -> Text:
+        return Text(proto_ref=self._proto.text)
+
+    @text.setter
+    def text(self, text: Text):
+        self._proto.text.CopyFrom(text.proto)
+
+    @property
+    def override_text_enabled(self) -> bool:
+        return self._proto.override_text_enabled
+
+    @override_text_enabled.setter
+    def override_text_enabled(self, enabled: bool):
+        self._proto.override_text_enabled = enabled
+
+    @property
+    def override_text(self) -> str:
+        return self._proto.override_text
+
+    @override_text.setter
+    def override_text(self, text: str):
+        self._proto.override_text = text
+
+    @property
+    def prefix(self) -> str:
+        return self._proto.prefix
+
+    @prefix.setter
+    def prefix(self, prefix: str):
+        self._proto.prefix = prefix
+
+    @property
+    def suffix(self) -> str:
+        return self._proto.suffix
+
+    @suffix.setter
+    def suffix(self, suffix: str):
+        self._proto.suffix = suffix
+
+    @property
+    def unit(self) -> board_types_pb2.DimensionUnit.ValueType:
+        return self._proto.unit
+
+    @unit.setter
+    def unit(self, unit: board_types_pb2.DimensionUnit.ValueType):
+        self._proto.unit = unit
+
+    @property
+    def unit_format(self) -> board_types_pb2.DimensionUnitFormat.ValueType:
+        return self._proto.unit_format
+
+    @unit_format.setter
+    def unit_format(self, format: board_types_pb2.DimensionUnitFormat.ValueType):
+        self._proto.unit_format = format
+
+    @property
+    def arrow_direction(self) -> board_types_pb2.DimensionArrowDirection.ValueType:
+        return self._proto.arrow_direction
+
+    @arrow_direction.setter
+    def arrow_direction(self, direction: board_types_pb2.DimensionArrowDirection.ValueType):
+        self._proto.arrow_direction = direction
+
+    @property
+    def precision(self) -> board_types_pb2.DimensionPrecision.ValueType:
+        return self._proto.precision
+
+    @precision.setter
+    def precision(self, precision: board_types_pb2.DimensionPrecision.ValueType):
+        self._proto.precision = precision
+
+    @property
+    def suppress_trailing_zeroes(self) -> bool:
+        return self._proto.suppress_trailing_zeroes
+
+    @suppress_trailing_zeroes.setter
+    def suppress_trailing_zeroes(self, suppress: bool):
+        self._proto.suppress_trailing_zeroes = suppress
+
+    @property
+    def line_thickness(self) -> int:
+        return self._proto.line_thickness.value_nm
+
+    @line_thickness.setter
+    def line_thickness(self, thickness: int):
+        self._proto.line_thickness.value_nm = thickness
+
+    @property
+    def arrow_length(self) -> int:
+        return self._proto.arrow_length.value_nm
+
+    @arrow_length.setter
+    def arrow_length(self, length: int):
+        self._proto.arrow_length.value_nm = length
+
+    @property
+    def extension_offset(self) -> int:
+        return self._proto.extension_offset.value_nm
+
+    @extension_offset.setter
+    def extension_offset(self, offset: int):
+        self._proto.extension_offset.value_nm = offset
+
+    @property
+    def text_position(self) -> board_types_pb2.DimensionTextPosition.ValueType:
+        return self._proto.text_position
+
+    @text_position.setter
+    def text_position(self, position: board_types_pb2.DimensionTextPosition.ValueType):
+        self._proto.text_position = position
+
+    @property
+    def keep_text_aligned(self) -> bool:
+        return self._proto.keep_text_aligned
+
+    @keep_text_aligned.setter
+    def keep_text_aligned(self, aligned: bool):
+        self._proto.keep_text_aligned = aligned
+
+
+class AlignedDimension(Dimension):
+    def __init__(self, proto: Optional[board_types_pb2.Dimension] = None):
+        self._proto = board_types_pb2.Dimension()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert self._proto.WhichOneof("dimension_style") == "aligned"
+
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.aligned.start)
+
+    @start.setter
+    def start(self, start: Vector2):
+        self._proto.aligned.start.CopyFrom(start.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.aligned.end)
+
+    @end.setter
+    def end(self, end: Vector2):
+        self._proto.aligned.end.CopyFrom(end.proto)
+
+    @property
+    def height(self) -> int:
+        return self._proto.aligned.height.value_nm
+
+    @height.setter
+    def height(self, height: int):
+        self._proto.aligned.height.value_nm = height
+
+    @property
+    def extension_height(self) -> int:
+        return self._proto.aligned.extension_height.value_nm
+
+    @extension_height.setter
+    def extension_height(self, extension_height: int):
+        self._proto.aligned.extension_height.value_nm = extension_height
+
+
+class OrthogonalDimension(Dimension):
+    def __init__(self, proto: Optional[board_types_pb2.Dimension] = None):
+        self._proto = board_types_pb2.Dimension()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert self._proto.WhichOneof("dimension_style") == "orthogonal"
+
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.orthogonal.start)
+
+    @start.setter
+    def start(self, start: Vector2):
+        self._proto.orthogonal.start.CopyFrom(start.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.orthogonal.end)
+
+    @end.setter
+    def end(self, end: Vector2):
+        self._proto.orthogonal.end.CopyFrom(end.proto)
+
+    @property
+    def height(self) -> int:
+        return self._proto.orthogonal.height.value_nm
+
+    @height.setter
+    def height(self, height: int):
+        self._proto.orthogonal.height.value_nm = height
+
+    @property
+    def extension_height(self) -> int:
+        return self._proto.orthogonal.extension_height.value_nm
+
+    @extension_height.setter
+    def extension_height(self, extension_height: int):
+        self._proto.orthogonal.extension_height.value_nm = extension_height
+
+    @property
+    def alignment(self) -> base_types_pb2.AxisAlignment.ValueType:
+        return self._proto.orthogonal.alignment
+
+    @alignment.setter
+    def alignment(self, alignment: base_types_pb2.AxisAlignment.ValueType):
+        self._proto.orthogonal.alignment = alignment
+
+class RadialDimension(Dimension):
+    def __init__(self, proto: Optional[board_types_pb2.Dimension] = None):
+        self._proto = board_types_pb2.Dimension()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert self._proto.WhichOneof("dimension_style") == "radial"
+
+    @property
+    def center(self) -> Vector2:
+        return Vector2(self._proto.radial.center)
+
+    @center.setter
+    def center(self, center: Vector2):
+        self._proto.radial.center.CopyFrom(center.proto)
+
+    @property
+    def radius_point(self) -> Vector2:
+        return Vector2(self._proto.radial.radius_point)
+
+    @radius_point.setter
+    def radius_point(self, radius_point: Vector2):
+        self._proto.radial.radius_point.CopyFrom(radius_point.proto)
+
+    @property
+    def leader_length(self) -> int:
+        return self._proto.radial.leader_length.value_nm
+
+    @leader_length.setter
+    def leader_length(self, leader_length: int):
+        self._proto.radial.leader_length.value_nm = leader_length
+
+
+class LeaderDimension(Dimension):
+    def __init__(self, proto: Optional[board_types_pb2.Dimension] = None):
+        self._proto = board_types_pb2.Dimension()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert self._proto.WhichOneof("dimension_style") == "leader"
+
+    @property
+    def start(self) -> Vector2:
+        return Vector2(self._proto.leader.start)
+
+    @start.setter
+    def start(self, start: Vector2):
+        self._proto.leader.start.CopyFrom(start.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.leader.end)
+
+    @end.setter
+    def end(self, end: Vector2):
+        self._proto.leader.end.CopyFrom(end.proto)
+
+    @property
+    def border_style(self) -> board_types_pb2.DimensionTextBorderStyle.ValueType:
+        return self._proto.leader.border_style
+
+    @border_style.setter
+    def border_style(self, border_style: board_types_pb2.DimensionTextBorderStyle.ValueType):
+        self._proto.leader.border_style = border_style
+
+
+class CenterDimension(Dimension):
+    def __init__(self, proto: Optional[board_types_pb2.Dimension] = None):
+        self._proto = board_types_pb2.Dimension()
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+        assert self._proto.WhichOneof("dimension_style") == "center"
+
+    @property
+    def center(self) -> Vector2:
+        return Vector2(self._proto.center.center)
+
+    @center.setter
+    def center(self, center: Vector2):
+        self._proto.center.center.CopyFrom(center.proto)
+
+    @property
+    def end(self) -> Vector2:
+        return Vector2(self._proto.center.end)
+
+    @end.setter
+    def end(self, end: Vector2):
+        self._proto.center.end.CopyFrom(end.proto)
+
+
+def to_concrete_dimension(dimension: Dimension) -> Optional[Dimension]:
+    cls = {
+        "aligned": AlignedDimension,
+        "orthogonal": OrthogonalDimension,
+        "radial": RadialDimension,
+        "leader": LeaderDimension,
+        "center": CenterDimension,
+        None: None,
+    }.get(dimension._proto.WhichOneof("dimension_style"), None)
+
+    return cls(dimension._proto) if cls is not None else None
+
+
 _proto_to_object: Dict[type[Message], type[Wrapper]] = {
     board_types_pb2.Arc: ArcTrack,
+    board_types_pb2.BoardGraphicShape: BoardShape,
+    board_types_pb2.BoardText: BoardText,
+    board_types_pb2.BoardTextBox: BoardTextBox,
+    board_types_pb2.Dimension: Dimension,
+    board_types_pb2.Field: Field,
+    board_types_pb2.Footprint3DModel: Footprint3DModel,
     board_types_pb2.FootprintInstance: FootprintInstance,
     board_types_pb2.Net: Net,
     board_types_pb2.Pad: Pad,
-    board_types_pb2.BoardText: BoardText,
-    board_types_pb2.BoardTextBox: BoardTextBox,
     board_types_pb2.Track: Track,
     board_types_pb2.Via: Via,
-    board_types_pb2.BoardGraphicShape: BoardShape,
-    board_types_pb2.Field: Field,
     board_types_pb2.Zone: Zone,
-    board_types_pb2.Footprint3DModel: Footprint3DModel,
 }
 
 

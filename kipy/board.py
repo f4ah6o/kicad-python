@@ -24,6 +24,7 @@ from kipy.board_types import (
     BoardItem,
     BoardText,
     BoardTextBox,
+    Dimension,
     FootprintInstance,
     Net,
     Pad,
@@ -32,6 +33,7 @@ from kipy.board_types import (
     Via,
     Zone,
     to_concrete_board_shape,
+    to_concrete_dimension,
     unwrap
 )
 from kipy.client import ApiError, KiCadClient
@@ -176,6 +178,17 @@ class Board:
             for item in (
                 to_concrete_board_shape(cast(BoardShape, item))
                 for item in self.get_items(types=[KiCadObjectType.KOT_PCB_SHAPE])
+            )
+            if item is not None
+        ]
+
+    def get_dimensions(self) -> Sequence[Dimension]:
+        """Retrieves all dimension objects on the board"""
+        return [
+            item
+            for item in (
+                to_concrete_dimension(cast(Dimension, item))
+                for item in self.get_items(types=[KiCadObjectType.KOT_PCB_DIMENSION])
             )
             if item is not None
         ]
