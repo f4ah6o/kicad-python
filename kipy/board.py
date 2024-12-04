@@ -40,6 +40,7 @@ from kipy.client import ApiError, KiCadClient
 from kipy.common_types import Commit, TitleBlockInfo, TextAttributes
 from kipy.geometry import Box2, PolygonWithHoles, Vector2
 from kipy.project import Project
+from kipy.proto.board import board_types_pb2
 from kipy.proto.common.commands import editor_commands_pb2, project_commands_pb2
 from kipy.proto.common.envelope_pb2 import ApiStatusCode
 from kipy.util import pack_any
@@ -440,3 +441,27 @@ class Board:
         cmd.position.CopyFrom(position.proto)
         cmd.tolerance = tolerance
         return self._kicad.send(cmd, HitTestResponse).result == HitTestResult.HTR_HIT
+
+    def get_visible_layers(self) -> Sequence[board_types_pb2.BoardLayer.ValueType]:
+        cmd = board_commands_pb2.GetVisibleLayers()
+        cmd.board.CopyFrom(self._doc)
+        response = self._kicad.send(cmd, board_commands_pb2.BoardLayers)
+        return response.layers
+
+    def set_visible_layers(self, layers: Sequence[board_types_pb2.BoardLayer.ValueType]):
+        cmd = board_commands_pb2.SetVisibleLayers()
+        cmd.board.CopyFrom(self._doc)
+        cmd.layers.extend(layers)
+        self._kicad.send(cmd, Empty)
+
+    def get_active_layer(self) -> board_types_pb2.BoardLayer.ValueType:
+        cmd = board_commands_pb2.GetActiveLayer()
+        cmd.board.CopyFrom(self._doc)
+        response = self._kicad.send(cmd, board_commands_pb2.BoardLayerResponse)
+        return response.layer
+
+    def set_active_layer(self, layer: board_types_pb2.BoardLayer.ValueType):
+        cmd = board_commands_pb2.SetActiveLayer()
+        cmd.board.CopyFrom(self._doc)
+        cmd.layer = layer
+        self._kicad.send(cmd, Empty)
