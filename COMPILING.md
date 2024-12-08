@@ -1,3 +1,11 @@
+# Installing dependencies
+
+You will need the Poetry dependency management tool as well as a compatible version of the
+Protocol Buffers compiler (`protoc`).  At the moment, `kicad-python` requires `protoc` version
+25.3 or older.  You can obtain it from the [protobuf releases page](https://github.com/protocolbuffers/protobuf/releases/tag/v25.3)
+if it is not available from your platform's package manager.  Make sure `protoc` or `protoc.exe` is
+in your PATH.
+
 # Building kicad-python
 
 First, run `git submodule update --init` to add KiCad's source code as a submodule.
