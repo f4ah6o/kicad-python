@@ -34,12 +34,13 @@ mypy = "^1.9.0"
 [build-system]
 requires = [
     "poetry-core",
-    "protoletariat == 3.2.*"
+    "protoletariat == 3.2.*",
+    "setuptools"
 ]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.build]
-generate-setup-file = false
+generate-setup-file = true
 script = "build.py"
 
 [tool.ruff]

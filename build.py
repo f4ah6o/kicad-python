@@ -16,6 +16,7 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import setuptools
 
 from tools.generate_protos import generate_protos
 
@@ -25,3 +26,20 @@ if __name__ == "__main__":
     proto_in = os.path.join(os.getcwd(), "kicad/api/proto")
     proto_out = os.path.join(os.getcwd(), "kipy/proto")
     generate_protos(proto_in, proto_out)
+
+
+def build(setup_kwargs):
+    # Poetry assumes we want a targeted build since we have a build script,
+    # but there is no way to specify that we actually want to build for any
+    # in the pyproject.toml file :/
+    try:
+        setuptools.setup(
+            **setup_kwargs,
+            script_args = ['bdist_wheel'],
+            options = {
+                'bdist_wheel': { 'plat_name': 'any' },
+                'egg_info': { 'egg_base': './dist/' }
+            }
+        )
+    except Exception as e:
+        print(f"Failed to build wheel: {e}")
