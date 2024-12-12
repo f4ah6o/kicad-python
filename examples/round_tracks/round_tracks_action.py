@@ -304,7 +304,7 @@ class RoundTracks(RoundTracksDialog):
             for v in viasInNet:
                 # a buried/blind via will report only layers affected
                 # a through via will return all 32 possible layers
-                layerSet = v.layer_set()
+                layerSet = set(v.padstack.layers)
                 for layer in tracksPerLayer:
                     if layer in layerSet:
                         if layer not in viasPerLayer:
@@ -324,7 +324,7 @@ class RoundTracks(RoundTracksDialog):
                     if p.pad_type in [PadType.PT_NPTH, PadType.PT_PTH]:
                         padsInNet.append(p)
                     else:
-                        if BoardLayer.BL_B_Cu in p.layer_set():
+                        if BoardLayer.BL_B_Cu in set(p.padstack.layers):
                             BCuPadsInNet.append(p)
                         else:
                             FCuPadsInNet.append(p)
@@ -357,7 +357,7 @@ class RoundTracks(RoundTracksDialog):
 
                 # for each remaining intersection, shorten each track by the same amount, and place a track between.
                 trackLengths = {}
-                
+
                 for ip in intersections:
                     (newX, newY) = (ip.x, ip.y)
                     tracksHere = []
@@ -449,7 +449,7 @@ class RoundTracks(RoundTracksDialog):
 
                                 sp = tracksHere[t1].start
                                 ep = tracksHere[(t1 + 1) % len(tracksHere)].start
-                
+
                                 if halfTrackAngle[t1] > math.pi / 2 - 0.001:
                                     track = Track()
                                     track.start = sp
