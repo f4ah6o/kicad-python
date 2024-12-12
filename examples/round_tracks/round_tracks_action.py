@@ -27,7 +27,8 @@ from copy import deepcopy
 from typing import Set
 
 from kipy import KiCad
-from kipy.board_types import Arc, Track, PadType, BoardLayer
+from kipy.errors import ConnectionError
+from kipy.board_types import ArcTrack, Track, PadType, BoardLayer
 from kipy.geometry import Vector2
 from kipy.util import from_mm
 
@@ -169,7 +170,11 @@ class RoundTracks(RoundTracksDialog):
         # even zone.SetNeedRefill(False) doesn't prevent it running twice
         self.prog.Pulse("Rebuilding zones...")
         wx.Yield()
-        self.board.refill_zones()
+
+        try:
+            self.board.refill_zones()
+        except ConnectionError:
+            pass
 
         if bool(self.prog):
             self.prog.Destroy()
@@ -378,7 +383,7 @@ class RoundTracks(RoundTracksDialog):
                     # if there are any arcs or vias present, skip the intersection entirely
                     skip = False
                     for t1 in tracksHere:
-                        if type(t1) == Arc or ip in viaLocations:
+                        if type(t1) == ArcTrack or ip in viaLocations:
                             skip = True
                             break
 
@@ -463,7 +468,7 @@ class RoundTracks(RoundTracksDialog):
                                         int(newX * (1 - f * 2) + sp.x * f + ep.x * f),
                                         int(newY * (1 - f * 2) + sp.y * f + ep.y * f),
                                     )
-                                    arc = Arc()
+                                    arc = ArcTrack()
                                     arc.start = sp
                                     arc.mid = mp
                                     arc.end = ep
