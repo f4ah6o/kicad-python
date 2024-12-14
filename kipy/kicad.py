@@ -48,6 +48,43 @@ def default_kicad_token() -> str:
         return token
     return ""
 
+class KiCadVersion:
+    def __init__(self, major: int, minor: int, patch: int, full_version: str):
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+        self.full_version = full_version
+
+    @staticmethod
+    def from_proto(proto: base_types_pb2.KiCadVersion) -> 'KiCadVersion':
+        return KiCadVersion(proto.major, proto.minor, proto.patch, proto.full_version)
+
+    def __str__(self):
+        return self.full_version
+
+    def __eq__(self, other):
+        if not isinstance(other, KiCadVersion):
+            return NotImplemented
+
+        return (
+            (self.major, self.minor, self.patch) == (other.major, other.minor, other.patch)
+            and (self.full_version == other.full_version)
+            )
+
+    def __lt__(self, other):
+        if not isinstance(other, KiCadVersion):
+            return NotImplemented
+        return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
+
+    def __le__(self, other):
+        return self == other or self < other
+
+    def __gt__(self, other):
+        return not self <= other
+
+    def __ge__(self, other):
+        return not self < other
+
 class KiCad:
     def __init__(self, socket_path: str=default_socket_path(),
                  client_name: str=random_client_name(),
@@ -74,10 +111,10 @@ class KiCad:
         k._client = client
         return k
 
-    def get_version(self):
+    def get_version(self) -> KiCadVersion:
         """Returns the KiCad version as a string, including any package-specific info"""
         response = self._client.send(commands.GetVersion(), commands.GetVersionResponse)
-        return response.version.full_version
+        return KiCadVersion.from_proto(response.version)
 
     def ping(self):
         self._client.send(commands.Ping(), Empty)
