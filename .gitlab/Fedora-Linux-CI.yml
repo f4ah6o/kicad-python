@@ -6,8 +6,7 @@ build-job:
   image: $DEFAULT_FEDORA_IMAGE
   before_script:
     - git submodule update --init
-    - dnf install protobuf-compiler
-    - pip3 install poetry virtualenv
+    - dnf install -y protobuf-compiler python3-poetry python3-virtualenv
     - python3 -m venv env
     - source env/bin/activate
   script:
