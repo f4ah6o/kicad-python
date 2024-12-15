@@ -38,7 +38,7 @@ def build(setup_kwargs):
             script_args = ['bdist_wheel'],
             options = {
                 'bdist_wheel': { 'plat_name': 'any' },
-                'egg_info': { 'egg_base': './dist/' }
+                ##'egg_info': { 'egg_base': './dist/' }
             }
         )
     except Exception as e:
