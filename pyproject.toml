@@ -35,7 +35,7 @@ mypy = "^1.9.0"
 requires = [
     "poetry-core",
     "protoletariat == 3.2.*",
-    "setuptools"
+    "setuptools >= 42"
 ]
 build-backend = "poetry.core.masonry.api"
 
