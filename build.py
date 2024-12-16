@@ -21,7 +21,7 @@ import setuptools
 from tools.generate_protos import generate_protos
 
 
-if __name__ == "__main__":
+def pre_build():
     print("Generating protobuf wrappers...")
     proto_in = os.path.join(os.getcwd(), "kicad/api/proto")
     proto_out = os.path.join(os.getcwd(), "kipy/proto")
@@ -29,6 +29,8 @@ if __name__ == "__main__":
 
 
 def build(setup_kwargs):
+    pre_build()
+
     # Poetry assumes we want a targeted build since we have a build script,
     # but there is no way to specify that we actually want to build for any
     # in the pyproject.toml file :/
@@ -43,3 +45,6 @@ def build(setup_kwargs):
         )
     except Exception as e:
         print(f"Failed to build wheel: {e}")
+
+if __name__ == "__main__":
+    pre_build()
