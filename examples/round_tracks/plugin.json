@@ -1,5 +1,5 @@
 {
-    "identifier": "com.gitlab.craftyjon.kipy.round_tracks",
+    "identifier": "com.gitlab.kicad.kicad-python.round-tracks",
     "name": "Round Tracks",
     "description": "Subdivision-based track rounding",
     "runtime": {

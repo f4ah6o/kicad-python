@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kicad-python"
-version = "0.1.0a1"
+version = "0.1.0"
 description = "KiCad API Python Bindings"
 authors = ["The KiCad Development Team"]
 homepage = "https://kicad.org/"
@@ -19,7 +19,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
+python = ">=3.9,<3.13"
 protobuf = "^4.21.12"
 pynng = "^0.7.2"
 

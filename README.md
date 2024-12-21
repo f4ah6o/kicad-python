@@ -3,10 +3,24 @@
 `kicad-python` is the official Python bindings for the [KiCad](https://kicad.org) IPC API.  This
 library makes it possible to develop scripts and tools that interact with a running KiCad session.
 
+The KiCad IPC API can be considered in "public beta" state with the release of KiCad 9 (currently
+planned for on or around February 1, 2025).  The existing SWIG-based Python bindings for KiCad's
+PCB editor still exist in KiCad 9, but are in maintenance mode and will not be expanded.
+
 For more information about the IPC API, please see the [KiCad developer documentation](https://dev-docs.kicad.org).
 
-Note: Version 0.0.2 and prior of this package are an obsolete earlier effort and are unrelated to
-this codebase.
+> Note: Version 0.0.2 and prior of this package are an obsolete earlier effort and are unrelated to
+> this codebase.
+
+## Requirements
+
+Using the IPC API requires a suitable version of KiCad (9.0 or higher) and requires that KiCad be
+running with the API server enabled in Preferences > Plugins.  This package also depends on the
+`protobuf` and `pynng` packages for communication with KiCad.
+
+> Note: Unlike the SWIG-based Python bindings, the IPC API requires communication with a running
+> instance of KiCad.  It is not possible to use `kicad-python` to manipulate KiCad design files
+> without KiCad running.
 
 ## Contributing
 
@@ -25,9 +39,23 @@ See COMPILING.md
 
 ## API Documentation
 
-There is no documentation yet, sorry.  We expect things to be stable enough to begin documentation
-for general use in late 2024.
+There is no documentation separate from the code comments and examples yet, sorry!  This will be
+more of a priority once the KiCad 9 release is stable.
 
 ## Examples
 
 Check out the repository for some example scripts that may serve as a starting point.
+
+## Release History
+
+### 0.1.0 (December 21, 2024)
+
+*Corresponding KiCad version: 9.0.0-rc1*
+
+First formal release of the new IPC-API version of this package.  Contains support for most of the
+KiCad API functionality that is currently exposed, which is focused around the PCB editor to enable
+a transition path from existing SWIG-based plugins.
+
+Caveats / Known Issues:
+
+- Compatibility limited to Python 3.9 ~ 3.12 due to `pynng` not yet being updated for 3.13
