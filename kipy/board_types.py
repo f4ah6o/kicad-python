@@ -73,7 +73,7 @@ from kipy.proto.board.board_types_pb2 import (  # noqa
 
 class BoardItem(Item):
     @property
-    def id(self):
+    def id(self) -> KIID:
         return self.proto.id
 
 

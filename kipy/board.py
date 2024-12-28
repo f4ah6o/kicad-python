@@ -355,10 +355,10 @@ class Board:
         if isinstance(items, BoardItem):
             return Box2.from_proto(response.boxes[0]) if len(response.boxes) == 1 else None
 
-        item_to_bbox = {item: bbox for item, bbox in zip(response.items, response.boxes)}
+        item_to_bbox = {item.value: bbox for item, bbox in zip(response.items, response.boxes)}
         return [
             Box2.from_proto(box)
-            for box in (item_to_bbox.get(item.id, None) for item in items)
+            for box in (item_to_bbox.get(item.id.value, None) for item in items)
             if box is not None
         ]
 
@@ -389,10 +389,10 @@ class Board:
         if isinstance(pads, Pad):
             return PolygonWithHoles(response.polygons[0]) if len(response.polygons) == 1 else None
 
-        pad_to_polygon = {pad: polygon for pad, polygon in zip(response.pads, response.polygons)}
+        pad_to_polygon = {pad.value: polygon for pad, polygon in zip(response.pads, response.polygons)}
         return [
             PolygonWithHoles(p)
-            for p in (pad_to_polygon.get(pad.id, None) for pad in pads)
+            for p in (pad_to_polygon.get(pad.id.value, None) for pad in pads)
             if p is not None
         ]
 
