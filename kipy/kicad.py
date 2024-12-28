@@ -119,6 +119,19 @@ class KiCad:
     def ping(self):
         self._client.send(commands.Ping(), Empty)
 
+    def get_plugin_settings_path(self, identifier: str) -> str:
+        """Return a writeable path that a plugin can use for storing persistent data such as
+        configuration files, etc.  This path may not yet exist; actual creation of the directory
+        for a given plugin is up to the plugin itself.  Files in this path will not be modified if
+        the plugin is uninstalled or upgraded.
+
+        :param identifier: should be the full identifier of the plugin (e.g. org.kicad.myplugin)
+        :return: a path, with local separators, that the plugin can use for storing settings
+        """
+        cmd = commands.GetPluginSettingsPath()
+        cmd.identifier = identifier
+        return self._client.send(cmd, commands.StringResponse).response
+
     def run_action(self, action: str):
         """Runs a KiCad tool action, if it is available
 
