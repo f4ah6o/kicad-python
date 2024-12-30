@@ -21,6 +21,7 @@ from google.protobuf.empty_pb2 import Empty
 
 from kipy.board_types import (
     ArcTrack,
+    BoardEditorAppearanceSettings,
     BoardItem,
     BoardText,
     BoardTextBox,
@@ -464,4 +465,14 @@ class Board:
         cmd = board_commands_pb2.SetActiveLayer()
         cmd.board.CopyFrom(self._doc)
         cmd.layer = layer
+        self._kicad.send(cmd, Empty)
+
+    def get_editor_appearance_settings(self) -> BoardEditorAppearanceSettings:
+        cmd = board_commands_pb2.GetBoardEditorAppearanceSettings()
+        response = self._kicad.send(cmd, board_commands_pb2.BoardEditorAppearanceSettings)
+        return BoardEditorAppearanceSettings(response)
+
+    def set_editor_appearance_settings(self, settings: BoardEditorAppearanceSettings):
+        cmd = board_commands_pb2.SetBoardEditorAppearanceSettings()
+        cmd.settings.CopyFrom(settings.proto)
         self._kicad.send(cmd, Empty)

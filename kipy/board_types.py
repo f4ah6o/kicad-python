@@ -22,7 +22,7 @@ from google.protobuf.any_pb2 import Any
 from kipy.proto.common.types import KIID
 from kipy.proto.common.types import base_types_pb2
 from kipy.proto.common.types.base_types_pb2 import LockedState
-from kipy.proto.board import board_types_pb2
+from kipy.proto.board import board_commands_pb2, board_types_pb2
 from kipy.common_types import (
     GraphicAttributes,
     TextAttributes,
@@ -70,6 +70,12 @@ from kipy.proto.board.board_types_pb2 import (  # noqa
     ZoneType,
 )
 
+from kipy.proto.board.board_commands_pb2 import (  # noqa
+    InactiveLayerDisplayMode,
+    NetColorDisplayMode,
+    BoardFlipMode,
+    RatsnestDisplayMode
+)
 
 class BoardItem(Item):
     @property
@@ -1820,6 +1826,58 @@ def to_concrete_dimension(dimension: Dimension) -> Optional[Dimension]:
     }.get(dimension._proto.WhichOneof("dimension_style"), None)
 
     return cls(dimension._proto) if cls is not None else None
+
+
+class BoardEditorAppearanceSettings(Wrapper):
+    def __init__(
+        self,
+        proto: Optional[board_commands_pb2.BoardEditorAppearanceSettings] = None,
+        proto_ref: Optional[board_commands_pb2.BoardEditorAppearanceSettings] = None,
+    ):
+        self._proto = (
+            proto_ref
+            if proto_ref is not None
+            else board_commands_pb2.BoardEditorAppearanceSettings()
+        )
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def inactive_layer_display(self) -> board_commands_pb2.InactiveLayerDisplayMode.ValueType:
+        """How layers other than the active (selected) layer are displayed"""
+        return self._proto.inactive_layer_display
+
+    @inactive_layer_display.setter
+    def inactive_layer_display(self, mode: board_commands_pb2.InactiveLayerDisplayMode.ValueType):
+        self._proto.inactive_layer_display = mode
+
+    @property
+    def net_color_display(self) -> board_commands_pb2.NetColorDisplayMode.ValueType:
+        """Whether to apply net and netclass colors to copper items and ratsnest lines"""
+        return self._proto.net_color_display
+
+    @net_color_display.setter
+    def net_color_display(self, mode: board_commands_pb2.NetColorDisplayMode.ValueType):
+        self._proto.net_color_display = mode
+
+    @property
+    def board_flip(self) -> board_commands_pb2.BoardFlipMode.ValueType:
+        """Whether or not the board view is flipped (mirrored around the X axis)"""
+        return self._proto.board_flip
+
+    @board_flip.setter
+    def board_flip(self, mode: board_commands_pb2.BoardFlipMode.ValueType):
+        self._proto.board_flip = mode
+
+    @property
+    def ratsnest_display(self) -> board_commands_pb2.RatsnestDisplayMode.ValueType:
+        """Whether or not ratsnest lines are drawn to hidden layers"""
+        return self._proto.ratsnest_display
+
+    @ratsnest_display.setter
+    def ratsnest_display(self, mode: board_commands_pb2.RatsnestDisplayMode.ValueType):
+        self._proto.ratsnest_display = mode
 
 
 _proto_to_object: Dict[type[Message], type[Wrapper]] = {
