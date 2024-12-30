@@ -26,3 +26,46 @@ class NetClass(Wrapper):
     @property
     def name(self) -> str:
         return self._proto.name
+
+class TextVariables(Wrapper):
+    def __init__(self, proto: project_settings_pb2.TextVariables = project_settings_pb2.TextVariables()):
+        self._proto = proto
+
+    @property
+    def variables(self) -> dict:
+        return dict(self._proto.variables)
+
+    @variables.setter
+    def variables(self, value: dict):
+        self._proto.variables.clear()
+        self._proto.variables.update(value)
+
+    def __getitem__(self, key: str) -> str:
+        return self._proto.variables[key]
+
+    def __setitem__(self, key: str, value: str):
+        self._proto.variables[key] = value
+
+    def __delitem__(self, key: str):
+        del self._proto.variables[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self._proto.variables
+
+    def __iter__(self):
+        return iter(self._proto.variables)
+
+    def __len__(self) -> int:
+        return len(self._proto.variables)
+
+    def keys(self):
+        return self._proto.variables.keys()
+
+    def values(self):
+        return self._proto.variables.values()
+
+    def items(self):
+        return self._proto.variables.items()
+
+    def __repr__(self) -> str:
+        return f"TextVariables({self._proto.variables})"

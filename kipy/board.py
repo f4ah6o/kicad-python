@@ -94,7 +94,7 @@ class Board:
     def document(self) -> DocumentSpecifier:
         return self._doc
 
-    def project(self) -> Project:
+    def get_project(self) -> Project:
         return Project(self._kicad, self._doc)
 
     @property
