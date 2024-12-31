@@ -90,6 +90,9 @@ class Net(Wrapper):
         if proto is not None:
             self._proto.CopyFrom(proto)
 
+    def __repr__(self) -> str:
+        return f"Net(name={self.name}, code={self.code})"
+
     @property
     def name(self) -> str:
         return self._proto.name

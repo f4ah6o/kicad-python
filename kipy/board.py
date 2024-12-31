@@ -40,7 +40,7 @@ from kipy.board_types import (
 from kipy.client import ApiError, KiCadClient
 from kipy.common_types import Commit, TitleBlockInfo, TextAttributes
 from kipy.geometry import Box2, PolygonWithHoles, Vector2
-from kipy.project import Project
+from kipy.project import Project, NetClass
 from kipy.proto.board import board_types_pb2
 from kipy.proto.common.commands import editor_commands_pb2, project_commands_pb2
 from kipy.proto.common.envelope_pb2 import ApiStatusCode
@@ -261,6 +261,16 @@ class Board:
             Net(net)
             for net in self._kicad.send(command, board_commands_pb2.NetsResponse).nets
         ]
+
+    def get_netclass_for_nets(self, nets: Union[Net, Sequence[Net]]) -> Dict[str, NetClass]:
+        cmd = board_commands_pb2.GetNetClassForNets()
+        if isinstance(nets, Net):
+            cmd.net.append(nets.proto)
+        else:
+            cmd.net.extend([net.proto for net in nets])
+
+        response = self._kicad.send(cmd, board_commands_pb2.NetClassForNetsResponse)
+        return {key: NetClass(value) for key, value in response.classes.items()}
 
     def get_selection(self) -> Sequence[Wrapper]:
         return []

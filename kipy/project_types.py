@@ -25,7 +25,7 @@ from kipy.wrapper import Wrapper
 class NetClass(Wrapper):
     def __init__(self, proto: project_settings_pb2.NetClass = project_settings_pb2.NetClass()):
         self._proto = proto
-        self._proto = proto
+        self.proto.type = project_settings_pb2.NetClassType.NCT_EXPLICIT
 
     def __repr__(self) -> str:
         return (
@@ -49,6 +49,18 @@ class NetClass(Wrapper):
     @priority.setter
     def priority(self, priority: int):
         self._proto.priority = priority
+
+    @property
+    def type(self) -> project_settings_pb2.NetClassType.ValueType:
+        """The type (explicit or implicit) of the net class.  This is a read-only property;
+        net classes created through the API must always be explicit."""
+        return self._proto.type
+
+    @property
+    def constituents(self) -> Optional[list[str]]:
+        if self.type == project_settings_pb2.NetClassType.NCT_EXPLICIT:
+            return None
+        return list(self._proto.constituents)
 
     @property
     def clearance(self) -> Optional[int]:
