@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from typing import Optional
+
+from kipy.common_types import Color
 from kipy.proto.common.types import project_settings_pb2
 from kipy.wrapper import Wrapper
 
@@ -22,10 +25,206 @@ from kipy.wrapper import Wrapper
 class NetClass(Wrapper):
     def __init__(self, proto: project_settings_pb2.NetClass = project_settings_pb2.NetClass()):
         self._proto = proto
+        self._proto = proto
+
+    def __repr__(self) -> str:
+        return (
+            f"NetClass(name={self.name!r}, priority={self.priority!r}, clearance={self.clearance!r}, "
+            f"track_width={self.track_width!r}, diff_pair_track_width={self.diff_pair_track_width!r}, "
+            f"diff_pair_gap={self.diff_pair_gap!r}, diff_pair_via_gap={self.diff_pair_via_gap!r}, "
+            f"via_diameter={self.via_diameter!r}, via_drill={self.via_drill!r}, "
+            f"microvia_diameter={self.microvia_diameter!r}, microvia_drill={self.microvia_drill!r}, "
+            f"board_color={self.board_color!r}, wire_width={self.wire_width!r}, "
+            f"bus_width={self.bus_width!r}, schematic_color={self.schematic_color!r})"
+        )
 
     @property
     def name(self) -> str:
         return self._proto.name
+
+    @property
+    def priority(self) -> int:
+        return self._proto.priority
+
+    @priority.setter
+    def priority(self, priority: int):
+        self._proto.priority = priority
+
+    @property
+    def clearance(self) -> Optional[int]:
+        if self._proto.HasField("board") and self._proto.board.HasField("clearance"):
+            return self._proto.board.clearance.value_nm
+        return None
+
+    @clearance.setter
+    def clearance(self, clearance: Optional[int]):
+        if clearance is None:
+            self._proto.board.ClearField("clearance")
+        else:
+            self._proto.board.clearance.value_nm = clearance
+
+    @property
+    def track_width(self) -> Optional[int]:
+        if self._proto.HasField("board") and self._proto.board.HasField("track_width"):
+            return self._proto.board.track_width.value_nm
+        return None
+
+    @track_width.setter
+    def track_width(self, width: Optional[int]):
+        if width is None:
+            self._proto.board.ClearField("track_width")
+        else:
+            self._proto.board.track_width.value_nm = width
+
+    @property
+    def diff_pair_track_width(self) -> Optional[int]:
+        if self._proto.HasField("board") and self._proto.board.HasField("diff_pair_track_width"):
+            return self._proto.board.diff_pair_track_width.value_nm
+        return None
+
+    @diff_pair_track_width.setter
+    def diff_pair_track_width(self, width: Optional[int]):
+        if width is None:
+            self._proto.board.ClearField("diff_pair_track_width")
+        else:
+            self._proto.board.diff_pair_track_width.value_nm = width
+
+    @property
+    def diff_pair_gap(self) -> Optional[int]:
+        if self._proto.HasField("board") and self._proto.board.HasField("diff_pair_gap"):
+            return self._proto.board.diff_pair_gap.value_nm
+        return None
+
+    @diff_pair_gap.setter
+    def diff_pair_gap(self, gap: Optional[int]):
+        if gap is None:
+            self._proto.board.ClearField("diff_pair_gap")
+        else:
+            self._proto.board.diff_pair_gap.value_nm = gap
+
+    @property
+    def diff_pair_via_gap(self) -> Optional[int]:
+        if self._proto.HasField("board") and self._proto.board.HasField("diff_pair_via_gap"):
+            return self._proto.board.diff_pair_via_gap.value_nm
+        return None
+
+    @diff_pair_via_gap.setter
+    def diff_pair_via_gap(self, gap: Optional[int]):
+        if gap is None:
+            self._proto.board.ClearField("diff_pair_via_gap")
+        else:
+            self._proto.board.diff_pair_via_gap.value_nm = gap
+
+    @property
+    def via_diameter(self) -> Optional[int]:
+        if (self._proto.board.HasField("via_stack")
+            and len(self._proto.board.via_stack.copper_layers) > 0
+        ):
+            return self._proto.board.via_stack.copper_layers[0].size.x_nm
+        return None
+
+    @via_diameter.setter
+    def via_diameter(self, diameter: Optional[int]):
+        if diameter is None:
+            self._proto.board.via_stack.ClearField("copper_layers")
+        else:
+            self._proto.board.via_stack.copper_layers[0].size.x_nm = diameter
+
+
+    @property
+    def via_drill(self) -> Optional[int]:
+        if (self._proto.board.HasField("via_stack")
+            and self._proto.board.via_stack.HasField("drill")
+        ):
+            return self._proto.board.via_stack.drill.diameter.x_nm
+        return None
+
+    @via_drill.setter
+    def via_drill(self, diameter: Optional[int]):
+        if diameter is None:
+            self._proto.board.via_stack.ClearField("drill")
+        else:
+            self._proto.board.via_stack.drill.diameter.x_nm = diameter
+
+    @property
+    def microvia_diameter(self) -> Optional[int]:
+        if self._proto.board.HasField("microvia_stack"):
+            return self._proto.board.microvia_stack.copper_layers[0].size.x_nm
+        return None
+
+    @microvia_diameter.setter
+    def microvia_diameter(self, diameter: Optional[int]):
+        if diameter is None:
+            self._proto.board.ClearField("microvia_stack")
+        else:
+            self._proto.board.microvia_stack.copper_layers[0].size.x_nm = diameter
+
+    @property
+    def microvia_drill(self) -> Optional[int]:
+        if (self._proto.board.HasField("microvia_stack")
+            and self._proto.board.microvia_stack.HasField("drill")
+        ):
+            return self._proto.board.microvia_stack.drill.diameter.x_nm
+        return None
+
+    @microvia_drill.setter
+    def microvia_drill(self, diameter: Optional[int]):
+        if diameter is None:
+            self._proto.board.microvia_stack.ClearField("drill")
+        else:
+            self._proto.board.microvia_stack.drill.diameter.x_nm = diameter
+
+    @property
+    def board_color(self) -> Optional[Color]:
+        if self._proto.HasField("board") and self._proto.board.HasField("color"):
+            return Color(self._proto.board.color)
+        return None
+
+    @board_color.setter
+    def board_color(self, color: Optional[Color]):
+        if color is None:
+            self._proto.board.ClearField("color")
+        else:
+            self._proto.board.color.CopyFrom(color.proto)
+
+    @property
+    def wire_width(self) -> Optional[int]:
+        if self._proto.HasField("schematic") and self._proto.schematic.HasField("wire_width"):
+            return self._proto.schematic.wire_width.value_nm
+        return None
+
+    @wire_width.setter
+    def wire_width(self, value: Optional[int]):
+        if value is None:
+            self._proto.schematic.ClearField("wire_width")
+        else:
+            self._proto.schematic.wire_width.value_nm = value
+
+    @property
+    def bus_width(self) -> Optional[int]:
+        if self._proto.HasField("schematic") and self._proto.schematic.HasField("bus_width"):
+            return self._proto.schematic.bus_width.value_nm
+        return None
+
+    @bus_width.setter
+    def bus_width(self, value: Optional[int]):
+        if value is None:
+            self._proto.schematic.ClearField("bus_width")
+        else:
+            self._proto.schematic.bus_width.value_nm = value
+
+    @property
+    def schematic_color(self) -> Optional[Color]:
+        if self._proto.HasField("schematic") and self._proto.schematic.HasField("color"):
+            return Color(self._proto.schematic.color)
+        return None
+
+    @schematic_color.setter
+    def schematic_color(self, color: Optional[Color]):
+        if color is None:
+            self._proto.schematic.ClearField("color")
+        else:
+            self._proto.schematic.color.CopyFrom(color.proto)
 
 class TextVariables(Wrapper):
     def __init__(self, proto: project_settings_pb2.TextVariables = project_settings_pb2.TextVariables()):
