@@ -573,7 +573,7 @@ def arc_center(start: Vector2, mid: Vector2, end: Vector2) -> Optional[Vector2]:
         return None
 
     # Intersect the two perpendicular bisectors to find the center
-    t = (mid2.x - mid1.x) * dir2.y - (mid2.y - mid1.y) * dir2.x / det
+    t = ((mid2.x - mid1.x) * dir2.y - (mid2.y - mid1.y) * dir2.x) / det
     center = mid1 + dir1 * t
 
     return center
