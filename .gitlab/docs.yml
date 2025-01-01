@@ -23,5 +23,5 @@ build-docs:
   script:
     - docker build -t "${CI_REGISTRY_IMAGE}/kicad-python-docs:$CI_COMMIT_BRANCH" -f ./docs/Dockerfile .
     - docker push "${CI_REGISTRY_IMAGE}/kicad-python-docs:$CI_COMMIT_BRANCH"
-  rules:
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+  #rules:
+  #  - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
