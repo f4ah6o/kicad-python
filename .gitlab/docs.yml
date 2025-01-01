@@ -14,7 +14,7 @@ build-docs:
   stage: build
   artifacts:
     paths:
-    - docs/_build
+    - docs-html
   tags:
     - gitlab-org-docker
   before_script:
