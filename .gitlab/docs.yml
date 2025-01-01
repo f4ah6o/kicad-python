@@ -1,0 +1,27 @@
+test:
+  image: python:3.9-alpine
+  stage: test
+  script:
+  - pip install -U sphinx
+  - sphinx-build -b html docs docs/_build
+  rules:
+    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
+
+deploy:
+  image: docker:stable
+  services:
+    - docker:dind
+  stage: build
+  artifacts:
+    paths:
+    - docs/_build
+  tags:
+    - gitlab-org-docker
+  before_script:
+    - docker info
+    - docker login -u gitlab-ci-token -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
+  script:
+    - docker build -t "${CI_REGISTRY_IMAGE}/kicad-python-docs:$CI_COMMIT_BRANCH" -f ./docs/Dockerfile .
+    - docker push "${CI_REGISTRY_IMAGE}/kicad-python-docs:$CI_COMMIT_BRANCH"
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
