@@ -4,7 +4,7 @@ USER root
 WORKDIR /src
 COPY . ./
 
-RUN pip install -U sphinx
+RUN pip install -U sphinx furo
 RUN sphinx-build -b html docs docs/_build
 
 FROM scratch as output-image
