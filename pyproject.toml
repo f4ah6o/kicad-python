@@ -38,7 +38,8 @@ setuptools = "^75.6.0"
 requires = [
     "poetry-core",
     "protoletariat == 3.3.*",
-    "setuptools"
+    "setuptools",
+    "mypy-protobuf == 3.6.*"
 ]
 build-backend = "poetry.core.masonry.api"
 
