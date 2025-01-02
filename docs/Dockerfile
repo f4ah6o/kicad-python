@@ -4,7 +4,9 @@ USER root
 WORKDIR /src
 COPY . ./
 
+RUN git submodule update --init --depth=1
 RUN pip install -U sphinx furo
+RUN pip install -e .
 RUN sphinx-build -b html docs docs/_build
 
 FROM scratch as output-image
