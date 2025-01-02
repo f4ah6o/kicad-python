@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Classes for interacting with KiCad at a high level"""
+
 import os
 import platform
 import random
 import string
 from tempfile import gettempdir
-from typing import Sequence, Union
+from typing import Optional, Sequence, Union
 from google.protobuf.empty_pb2 import Empty
 
 from kipy.board import Board
@@ -33,16 +35,16 @@ from kipy.proto.common.types import base_types_pb2, DocumentType, DocumentSpecif
 from kipy.proto.common.commands import base_commands_pb2
 
 
-def default_socket_path() -> str:
+def _default_socket_path() -> str:
     path = os.environ.get('KICAD_API_SOCKET')
     if path is not None:
         return path
     return f'ipc://{gettempdir()}\\kicad\\api.sock' if platform.system() == 'Windows' else 'ipc:///tmp/kicad/api.sock'
 
-def random_client_name() -> str:
+def _random_client_name() -> str:
     return 'anonymous-'+''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
 
-def default_kicad_token() -> str:
+def _default_kicad_token() -> str:
     token = os.environ.get('KICAD_API_TOKEN')
     if token is not None:
         return token
@@ -86,9 +88,9 @@ class KiCadVersion:
         return not self < other
 
 class KiCad:
-    def __init__(self, socket_path: str=default_socket_path(),
-                 client_name: str=random_client_name(),
-                 kicad_token: str=default_kicad_token(),
+    def __init__(self, socket_path: Optional[str]=None,
+                 client_name: Optional[str]=None,
+                 kicad_token: Optional[str]=None,
                  timeout_ms: int=2000):
         """Creates a connection to a running KiCad instance
 
@@ -102,6 +104,12 @@ class KiCad:
             KiCad instance.  Leave default to read from the KICAD_API_TOKEN environment variable.
         :param timeout_ms: The maximum time to wait for a response from KiCad, in milliseconds
         """
+        if socket_path is None:
+            socket_path = _default_socket_path()
+        if client_name is None:
+            client_name = _random_client_name()
+        if kicad_token is None:
+            kicad_token = _default_kicad_token()
         self._client = KiCadClient(socket_path, client_name, kicad_token, timeout_ms)
 
     @staticmethod

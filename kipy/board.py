@@ -236,6 +236,7 @@ class BoardStackup(Wrapper):
 
 class Board:
     def __init__(self, kicad: KiCadClient, document: DocumentSpecifier):
+        """Represents an open board (.kicad_pcb) document in KiCad"""
         self._kicad = kicad
         self._doc = document
 
