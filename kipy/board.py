@@ -38,7 +38,7 @@ from kipy.board_types import (
     unwrap
 )
 from kipy.client import ApiError, KiCadClient
-from kipy.common_types import Commit, TitleBlockInfo, TextAttributes
+from kipy.common_types import Color, Commit, TitleBlockInfo, TextAttributes
 from kipy.geometry import Box2, PolygonWithHoles, Vector2
 from kipy.project import Project, NetClass
 from kipy.proto.board import board_types_pb2
@@ -80,6 +80,137 @@ class BoardLayerGraphicsDefaults(Wrapper):
     @property
     def text(self) -> TextAttributes:
         return TextAttributes(self._proto.text)
+
+class BoardStackupDielectricProperties(Wrapper):
+    def __init__(self, proto: Optional[board_pb2.BoardStackupDielectricProperties] = None):
+        self._proto = board_pb2.BoardStackupDielectricProperties()
+        if proto:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def epsilon_r(self) -> float:
+        return self._proto.epsilon_r
+
+    @epsilon_r.setter
+    def epsilon_r(self, epsilon_r: float):
+        self._proto.epsilon_r = epsilon_r
+
+    @property
+    def loss_tangent(self) -> float:
+        return self._proto.loss_tangent
+
+    @loss_tangent.setter
+    def loss_tangent(self, loss_tangent: float):
+        self._proto.loss_tangent = loss_tangent
+
+    @property
+    def material_name(self) -> str:
+        return self._proto.material_name
+
+    @material_name.setter
+    def material_name(self, name: str):
+        self._proto.material_name = name
+
+    @property
+    def thickness(self) -> int:
+        return self._proto.thickness.value_nm
+
+    @thickness.setter
+    def thickness(self, thickness: int):
+        self._proto.thickness.value_nm = thickness
+
+
+class BoardStackupDielectricLayer(Wrapper):
+    def __init__(self, proto: Optional[board_pb2.BoardStackupDielectricLayer] = None):
+        self._proto = board_pb2.BoardStackupDielectricLayer()
+        if proto:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def layers(self) -> List[BoardStackupDielectricProperties]:
+        return [BoardStackupDielectricProperties(layer) for layer in self._proto.layer]
+
+
+class BoardStackupLayer(Wrapper):
+    def __init__(self, proto: Optional[board_pb2.BoardStackupLayer] = None):
+        self._proto = board_pb2.BoardStackupLayer()
+        if proto:
+            self._proto.CopyFrom(proto)
+
+    def __repr__(self) -> str:
+        return (
+            f"BoardStackupLayer(layer={self.layer}, thickness={self.thickness}, "
+            f"enabled={self.enabled}, type={self.type}, material_name={self.material_name})"
+        )
+
+    @property
+    def thickness(self) -> int:
+        return self._proto.thickness.value_nm
+
+    @thickness.setter
+    def thickness(self, value: int):
+        self._proto.thickness.value_nm = value
+
+    @property
+    def layer(self) -> BoardLayer.ValueType:
+        return self._proto.layer
+
+    @layer.setter
+    def layer(self, value: BoardLayer.ValueType):
+        self._proto.layer = value
+
+    @property
+    def enabled(self) -> bool:
+        return self._proto.enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._proto.enabled = value
+
+    @property
+    def type(self) -> board_pb2.BoardStackupLayerType.ValueType:
+        return self._proto.type
+
+    @type.setter
+    def type(self, value: board_pb2.BoardStackupLayerType.ValueType):
+        self._proto.type = value
+
+    @property
+    def dielectric(self) -> BoardStackupDielectricLayer:
+        return BoardStackupDielectricLayer(self._proto.dielectric)
+
+    @dielectric.setter
+    def dielectric(self, value: BoardStackupDielectricLayer):
+        self._proto.dielectric.CopyFrom(value.proto)
+
+    @property
+    def color(self) -> Color:
+        return Color(self._proto.color)
+
+    @color.setter
+    def color(self, value: Color):
+        self._proto.color.CopyFrom(value.proto)
+
+    @property
+    def material_name(self) -> str:
+        return self._proto.material_name
+
+    @material_name.setter
+    def material_name(self, value: str):
+        self._proto.material_name = value
+
+class BoardStackup(Wrapper):
+    def __init__(self, proto: Optional[board_pb2.BoardStackup] = None):
+        self._proto = board_pb2.BoardStackup()
+        if proto:
+            self._proto.CopyFrom(proto)
+
+    def __repr__(self) -> str:
+        return f"BoardStackup(layers={self.layers})"
+
+    @property
+    def layers(self) -> List[BoardStackupLayer]:
+        return [BoardStackupLayer(layer) for layer in self._proto.layers]
 
 class Board:
     def __init__(self, kicad: KiCadClient, document: DocumentSpecifier):
@@ -296,10 +427,12 @@ class Board:
     def clear_selection(self):
         pass
 
-    def get_stackup(self) -> board_pb2.BoardStackup:
+    def get_stackup(self) -> BoardStackup:
         command = board_commands_pb2.GetBoardStackup()
         command.board.CopyFrom(self._doc)
-        return self._kicad.send(command, board_commands_pb2.BoardStackupResponse).stackup
+        return BoardStackup(
+            self._kicad.send(command, board_commands_pb2.BoardStackupResponse).stackup
+        )
 
     def get_graphics_defaults(self) -> Dict[int, BoardLayerGraphicsDefaults]:
         cmd = board_commands_pb2.GetGraphicsDefaults()
