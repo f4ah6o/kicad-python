@@ -119,6 +119,17 @@ class KiCad:
     def ping(self):
         self._client.send(commands.Ping(), Empty)
 
+    def get_kicad_binary_path(self, binary_name: str) -> str:
+        """Returns the full path to the given KiCad binary
+
+        :param binary_name: The short name of the binary, such as `kicad-cli` or `kicad-cli.exe`.
+                            If on Windows, an `.exe` extension will be assumed if not present.
+        :return: The full path to the binary
+        """
+        cmd = commands.GetKiCadBinaryPath()
+        cmd.binary_name = binary_name
+        return self._client.send(cmd, commands.PathResponse).path
+
     def get_plugin_settings_path(self, identifier: str) -> str:
         """Return a writeable path that a plugin can use for storing persistent data such as
         configuration files, etc.  This path may not yet exist; actual creation of the directory
