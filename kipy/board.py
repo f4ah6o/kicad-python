@@ -103,10 +103,22 @@ class Board:
         return self._doc.board_filename
 
     def save(self):
-        pass
+        command = editor_commands_pb2.SaveDocument()
+        command.document.CopyFrom(self._doc)
+        self._kicad.send(command, Empty)
 
-    def save_as(self, filename: str):
-        pass
+    def save_as(self, filename: str, overwrite: bool = False, include_project: bool = True):
+        command = editor_commands_pb2.SaveCopyOfDocument()
+        command.document.CopyFrom(self._doc)
+        command.path = filename
+        command.options.overwrite = overwrite
+        command.options.include_project = include_project
+        self._kicad.send(command, Empty)
+
+    def revert(self):
+        command = editor_commands_pb2.RevertDocument()
+        command.document.CopyFrom(self._doc)
+        self._kicad.send(command, Empty)
 
     def begin_commit(self) -> Commit:
         command = BeginCommit()
