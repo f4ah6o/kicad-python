@@ -12,3 +12,4 @@ build:
   script:
     #- poetry build
     - poetry install -v
+    - pytest
