@@ -1,4 +1,5 @@
 {
+    "$schema": "https://go.kicad.org/api/schemas/v1",
     "identifier": "com.gitlab.craftyjon.kipy.layer_indicator",
     "name": "Layer Indicator",
     "description": "Generates copper layer indicator footprints for the current board stackup",
