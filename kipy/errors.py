@@ -35,3 +35,8 @@ class ApiError(Exception):
     @property
     def raw_message(self) -> str:
         return self.raw_message
+
+class FutureVersionError(Exception):
+    """Raised when a version check shows that kicad-python is talking to a version of KiCad
+    newer than the one it was built against"""
+    pass

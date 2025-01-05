@@ -28,11 +28,13 @@ from google.protobuf.empty_pb2 import Empty
 from kipy.board import Board
 from kipy.client import KiCadClient, ApiError
 from kipy.common_types import Text, TextBox, CompoundShape
+from kipy.errors import FutureVersionError
 from kipy.geometry import Box2
 from kipy.project import Project
 from kipy.proto.common import commands
 from kipy.proto.common.types import base_types_pb2, DocumentType, DocumentSpecifier
 from kipy.proto.common.commands import base_commands_pb2
+from kipy.kicad_api_version import KICAD_API_VERSION
 
 
 def _default_socket_path() -> str:
@@ -60,6 +62,19 @@ class KiCadVersion:
     @staticmethod
     def from_proto(proto: base_types_pb2.KiCadVersion) -> 'KiCadVersion':
         return KiCadVersion(proto.major, proto.minor, proto.patch, proto.full_version)
+
+    @staticmethod
+    def from_git_describe(describe: str) -> 'KiCadVersion':
+        parts = describe.split('-')
+        if len(parts) < 3:
+            raise ValueError(f"Invalid git describe format: {describe}")
+
+        version_part = parts[0]
+        additional_info = '-'.join(parts[1:])
+
+        major, minor, patch = map(int, version_part.split('.'))
+
+        return KiCadVersion(major, minor, patch, f"{version_part}-{additional_info}")
 
     def __str__(self):
         return self.full_version
@@ -123,6 +138,23 @@ class KiCad:
         """Returns the KiCad version as a string, including any package-specific info"""
         response = self._client.send(commands.GetVersion(), commands.GetVersionResponse)
         return KiCadVersion.from_proto(response.version)
+
+    def get_api_version(self) -> KiCadVersion:
+        """Returns the version of KiCad that this library was built against"""
+        return KiCadVersion.from_git_describe(KICAD_API_VERSION)
+
+    def check_version(self) -> bool:
+        """Checks if the connected KiCad version matches the version this library was built against"""
+        kicad_version = self.get_version()
+        api_version = self.get_api_version()
+
+        if kicad_version > api_version:
+            raise FutureVersionError(
+                f"Warning: Connected KiCad version ({kicad_version}) is newer than "
+                f"the API version of kicad-python ({api_version})"
+            )
+
+        return True
 
     def ping(self):
         self._client.send(commands.Ping(), Empty)
