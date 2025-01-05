@@ -85,8 +85,8 @@ class Vector2(Wrapper):
 
     def __mul__(self, scalar: float) -> Vector2:
         r = Vector2(self._proto)
-        r.x = int(r.x * scalar)
-        r.y = int(r.y * scalar)
+        r.x = int(float(r.x) * scalar)
+        r.y = int(float(r.y) * scalar)
         return r
 
     def length(self) -> float:
@@ -571,14 +571,14 @@ def arc_center(start: Vector2, mid: Vector2, end: Vector2) -> Optional[Vector2]:
     mid1, dir1 = perpendicular_bisector(start, mid)
     mid2, dir2 = perpendicular_bisector(mid, end)
 
-    det = dir1.x * dir2.y - dir1.y * dir2.x
+    det = float(dir1.x * dir2.y - dir1.y * dir2.x)
 
     if det == 0:
         return None
 
     # Intersect the two perpendicular bisectors to find the center
     t = ((mid2.x - mid1.x) * dir2.y - (mid2.y - mid1.y) * dir2.x) / det
-    center = mid1 + dir1 * t
+    center = mid1 + (dir1 * t)
 
     return center
 

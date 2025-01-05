@@ -28,3 +28,9 @@ def mypy(session: Session) -> None:
     session.install("poetry")
     session.run("poetry", "install", "--with", "dev")
     session.run("mypy", "-p", "kipy")
+
+@nox.session
+def tests(session: Session) -> None:
+    session.install("poetry")
+    session.run("poetry", "install", "--with", "dev")
+    session.run("pytest")
