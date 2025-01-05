@@ -1320,6 +1320,15 @@ class Zone(BoardItem):
             self.border_style = ZoneBorderStyle.ZBS_DIAGONAL_EDGE
             self.border_hatch_pitch = from_mm(0.5)
 
+    def __repr__(self) -> str:
+        if self.type == ZoneType.ZT_COPPER:
+            assert self.net is not None
+            return f"Copper Zone(net={self.net.name}, layers={self.layers})"
+        elif self.type == ZoneType.ZT_RULE_AREA:
+            return f"Rule Area Zone(name={self.name}, layers={self.layers})"
+
+        return f"Zone(name={self.name}, type={self.type}, layers={self.layers})"
+
     @property
     def type(self) -> ZoneType.ValueType:
         return self._proto.type

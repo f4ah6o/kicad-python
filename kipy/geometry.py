@@ -193,6 +193,9 @@ class Box2:
         if size_proto is not None:
             self._size_proto.CopyFrom(size_proto)
 
+    def __repr__(self):
+        return f"Box2(pos={self.pos}, size={self.size})"
+
     @classmethod
     def from_xywh(cls, x_nm: int, y_nm: int, w_nm: int, h_nm: int):
         pos = Vector2.from_xy(x_nm, y_nm)
@@ -505,10 +508,10 @@ class PolygonWithHoles(Wrapper):
         if not self.outline.nodes:
             return Box2()
 
-        min_x = int('inf')
-        min_y = int('inf')
-        max_x = int('-inf')
-        max_y = int('-inf')
+        min_x = math.inf
+        min_y = math.inf
+        max_x = -math.inf
+        max_y = -math.inf
 
         for node in self.outline:
             if node.has_point:
@@ -524,7 +527,8 @@ class PolygonWithHoles(Wrapper):
                 max_y = max(max_y, box.pos.y + box.size.y)
 
         return Box2.from_pos_size(
-            Vector2.from_xy(min_x, min_y), Vector2.from_xy(max_x - min_x, max_y - min_y)
+            Vector2.from_xy(int(min_x), int(min_y)),
+            Vector2.from_xy(int(max_x - min_x), int(max_y - min_y)),
         )
 
     def move(self, delta: Vector2):
