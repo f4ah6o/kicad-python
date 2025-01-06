@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Oct 26 2018)
+## Python code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO *NOT* EDIT THIS FILE!
@@ -18,13 +18,9 @@ import wx.dataview
 class RoundTracksDialog ( wx.Dialog ):
 
 	def __init__( self, parent ):
-		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Round Tracks", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Round Tracks IPC API Demo", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
 
-		import sys
-		if sys.version_info[0] == 2:
-			self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
-		else:
-			self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+		self.SetSizeHints( wx.Size( 510,300 ), wx.DefaultSize )
 
 		grid_vert = wx.FlexGridSizer( 2, 1, 0, 0 )
 		grid_vert.AddGrowableCol( 0 )
@@ -47,7 +43,6 @@ class RoundTracksDialog ( wx.Dialog ):
 		grid_horiz.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
 		self.do_create = wx.CheckBox( self, wx.ID_ANY, u"create a new file", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.do_create.SetValue(False)
 		grid_horiz.Add( self.do_create, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, 5 )
 
 		self.use_native = wx.CheckBox( self, wx.ID_ANY, u"use native fillets", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -55,14 +50,16 @@ class RoundTracksDialog ( wx.Dialog ):
 		grid_horiz.Add( self.use_native, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, 5 )
 
 		self.avoid_junctions = wx.CheckBox( self, wx.ID_ANY, u"ignore junctions", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.avoid_junctions.SetValue(False)
 		grid_horiz.Add( self.avoid_junctions, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, 5 )
 
 		self.apply = wx.Button( self, wx.ID_ANY, u"Run", wx.DefaultPosition, wx.Size( 120,-1 ), 0 )
+
 		self.apply.SetDefault()
 		grid_horiz.Add( self.apply, 0, wx.ALL|wx.EXPAND, 5 )
 
+
 		grid_vert.Add( grid_horiz, 1, wx.EXPAND, 5 )
+
 
 		self.SetSizer( grid_vert )
 		self.Layout()
