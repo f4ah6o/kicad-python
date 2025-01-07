@@ -156,8 +156,9 @@ class BoardStackupLayer(Wrapper):
 
     def __repr__(self) -> str:
         return (
-            f"BoardStackupLayer(layer={self.layer}, thickness={self.thickness}, "
-            f"enabled={self.enabled}, type={self.type}, material_name={self.material_name})"
+            f"BoardStackupLayer(layer={BoardLayer.Name(self.layer)}, user_name={self.user_name},"
+            f"thickness={self.thickness}, enabled={self.enabled}, type={self.type},"
+            f"material_name={self.material_name})"
         )
 
     @property
@@ -219,6 +220,16 @@ class BoardStackupLayer(Wrapper):
     @material_name.setter
     def material_name(self, value: str):
         self._proto.material_name = value
+
+    @property
+    def user_name(self) -> str:
+        """The name of the layer shown in the KiCad GUI, which may be a default value like "F.Cu"
+        or may have been customized by the user. This field does not apply to dielectric layers."""
+        return self._proto.user_name
+
+    @user_name.setter
+    def user_name(self, value: str):
+        self._proto.user_name = value
 
 class BoardStackup(Wrapper):
     def __init__(self, proto: Optional[board_pb2.BoardStackup] = None):
