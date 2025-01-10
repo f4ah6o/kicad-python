@@ -649,6 +649,57 @@ class Field(BoardItem):
     def text(self, text: BoardText):
         self._proto.text.CopyFrom(text.proto)
 
+
+class ThermalSpokeSettings(Wrapper):
+    def __init__(
+        self,
+        proto: Optional[board_types_pb2.ThermalSpokeSettings] = None,
+        proto_ref: Optional[board_types_pb2.ThermalSpokeSettings] = None,
+    ):
+        self._proto = (
+            proto_ref
+            if proto_ref is not None
+            else board_types_pb2.ThermalSpokeSettings()
+        )
+
+        if proto is not None:
+            self._proto.CopyFrom(proto)
+
+    @property
+    def width(self) -> Optional[int]:
+        if self._proto.HasField("width"):
+            return self._proto.width
+        return None
+
+    @width.setter
+    def width(self, width: int):
+        if width is None:
+            self._proto.ClearField("width")
+        else:
+            self._proto.width = width
+
+    @property
+    def angle(self) -> Angle:
+        return Angle(self._proto.angle)
+
+    @angle.setter
+    def angle(self, angle: Angle):
+        self._proto.angle.CopyFrom(angle.proto)
+
+    @property
+    def gap(self) -> Optional[int]:
+        if self._proto.HasField("gap"):
+            return self._proto.gap
+        return None
+
+    @gap.setter
+    def gap(self, gap: Optional[int]):
+        if gap is None:
+            self._proto.ClearField("gap")
+        else:
+            self._proto.gap = gap
+
+
 class ZoneConnectionSettings(Wrapper):
     def __init__(
         self,
@@ -673,8 +724,8 @@ class ZoneConnectionSettings(Wrapper):
         self._proto.zone_connection = zone_connection
 
     @property
-    def thermal_spokes(self) -> board_types_pb2.ThermalSpokeSettings:
-        return self._proto.thermal_spokes
+    def thermal_spokes(self) -> ThermalSpokeSettings:
+        return ThermalSpokeSettings(self._proto.thermal_spokes)
 
 
 class SolderMaskOverrides(Wrapper):
