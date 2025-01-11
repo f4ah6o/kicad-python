@@ -526,5 +526,4 @@ if __name__ == "__main__":
     app = wx.App()
     rt = RoundTracks()
     rt.ShowModal()
-    app.MainLoop()
     rt.Destroy()
