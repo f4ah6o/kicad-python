@@ -491,21 +491,78 @@ class Board:
         response = self._kicad.send(cmd, board_commands_pb2.NetClassForNetsResponse)
         return {key: NetClass(value) for key, value in response.classes.items()}
 
-    def get_selection(self) -> Sequence[Wrapper]:
-        """Not yet implemented"""
-        return []
+    def get_selection(
+        self,
+        types: Optional[
+            Union[KiCadObjectType.ValueType, Sequence[KiCadObjectType.ValueType]]
+        ] = None,
+    ) -> Sequence[Wrapper]:
+        cmd = editor_commands_pb2.GetSelection()
+        cmd.header.document.CopyFrom(self._doc)
 
-    def add_to_selection(self, items):
-        """Not yet implemented"""
-        pass
+        if isinstance(types, int):
+            cmd.types.append(types)
+        else:
+            cmd.types.extend(types or [])
 
-    def remove_from_selection(self, items):
-        """Not yet implemented"""
-        pass
+        return [
+            unwrap(item)
+            for item in self._kicad.send(
+                cmd, editor_commands_pb2.SelectionResponse
+            ).items
+        ]
+
+    def add_to_selection(
+        self, items: Union[BoardItem, Sequence[BoardItem]]
+    ) -> Sequence[Wrapper]:
+        """Adds one or more items to the current selection on the board
+
+        :param items: The items to add to the selection
+        :return: The updated selection
+        """
+        cmd = editor_commands_pb2.AddToSelection()
+        cmd.header.document.CopyFrom(self._doc)
+
+        if isinstance(items, BoardItem):
+            cmd.items.append(items.id)
+        else:
+            cmd.items.extend([i.id for i in items])
+
+        return [
+            unwrap(item)
+            for item in self._kicad.send(
+                cmd, editor_commands_pb2.SelectionResponse
+            ).items
+        ]
+
+    def remove_from_selection(
+        self, items: Union[BoardItem, Sequence[BoardItem]]
+    ) -> Sequence[Wrapper]:
+        """Removes one or more items from the current selection on the board
+
+        :param items: The items to remove from the selection
+        :return: The updated selection
+        """
+        cmd = editor_commands_pb2.RemoveFromSelection()
+        cmd.header.document.CopyFrom(self._doc)
+
+        if isinstance(items, BoardItem):
+            cmd.items.append(items.id)
+        else:
+            cmd.items.extend([i.id for i in items])
+
+        return [
+            unwrap(item)
+            for item in self._kicad.send(
+                cmd, editor_commands_pb2.SelectionResponse
+            ).items
+        ]
 
     def clear_selection(self):
-        """Not yet implemented"""
-        pass
+        """Clears the current selection on the board"""
+        cmd = editor_commands_pb2.ClearSelection()
+        cmd.header.document.CopyFrom(self._doc)
+        self._kicad.send(cmd, Empty)
 
     def get_stackup(self) -> BoardStackup:
         """Retrieves the stackup for the board"""
