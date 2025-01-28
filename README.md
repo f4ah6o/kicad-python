@@ -71,6 +71,13 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 
 ## Release History
 
+### Unreleased
+
+- Updates for KiCad 9.0.0 release
+- Fix util.board_layer.canonical_name names for technical layers
+- Add board item selection management APIs
+- Fix requirements.txt files in sample plugins
+
 ### 0.1.2 (January 17, 2025)
 
 - Updates for KiCad 9.0.0-rc2 release
