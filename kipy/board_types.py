@@ -1814,6 +1814,12 @@ class AlignedDimension(Dimension):
 
         assert self._proto.WhichOneof("dimension_style") == "aligned"
 
+    def __repr__(self) -> str:
+        return (
+            f"AlignedDimension(start={self.start}, end={self.end}, "
+            f"height={self.height}, extension_height={self.extension_height})"
+        )
+
     @property
     def start(self) -> Vector2:
         return Vector2(self._proto.aligned.start)
@@ -1855,6 +1861,9 @@ class OrthogonalDimension(Dimension):
             self._proto.CopyFrom(proto)
 
         assert self._proto.WhichOneof("dimension_style") == "orthogonal"
+
+    def __repr__(self) -> str:
+        return f"OrthogonalDimension(start={self.start}, end={self.end}, alignment={self.alignment})"
 
     @property
     def start(self) -> Vector2:
@@ -1905,6 +1914,12 @@ class RadialDimension(Dimension):
 
         assert self._proto.WhichOneof("dimension_style") == "radial"
 
+    def __repr__(self) -> str:
+        return (
+            f"RadialDimension(center={self.center}, radius_point={self.radius_point}, "
+            f"leader_length={self.leader_length})"
+        )
+
     @property
     def center(self) -> Vector2:
         return Vector2(self._proto.radial.center)
@@ -1939,6 +1954,12 @@ class LeaderDimension(Dimension):
 
         assert self._proto.WhichOneof("dimension_style") == "leader"
 
+    def __repr__(self) -> str:
+        return (
+            f"LeaderDimension(start={self.start}, end={self.end}, "
+            f"border_style={self.border_style})"
+        )
+
     @property
     def start(self) -> Vector2:
         return Vector2(self._proto.leader.start)
@@ -1972,6 +1993,9 @@ class CenterDimension(Dimension):
             self._proto.CopyFrom(proto)
 
         assert self._proto.WhichOneof("dimension_style") == "center"
+
+    def __repr__(self) -> str:
+        return f"CenterDimension(center={self.center}, end={self.end})"
 
     @property
     def center(self) -> Vector2:
