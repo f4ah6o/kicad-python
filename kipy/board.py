@@ -346,6 +346,17 @@ class Board:
             for result in self._kicad.send(command, CreateItemsResponse).created_items
         ]
 
+    def _to_concrete_items(self, items: Sequence[Wrapper]) -> List[BoardItem]:
+        items_converted = []
+        for it in items:
+            if isinstance(it, BoardShape):
+                items_converted.append(to_concrete_board_shape(cast(BoardShape, it)))
+            elif isinstance(it, Dimension):
+                items_converted.append(to_concrete_dimension(cast(Dimension, it)))
+            else:
+                items_converted.append(it)
+        return items_converted
+
     def get_items(
         self, types: Union[KiCadObjectType.ValueType, Sequence[KiCadObjectType.ValueType]]
     ) -> Sequence[Wrapper]:
@@ -358,7 +369,9 @@ class Board:
         else:
             command.types.extend(types)
 
-        return [unwrap(item) for item in self._kicad.send(command, GetItemsResponse).items]
+        return self._to_concrete_items(
+            [unwrap(item) for item in self._kicad.send(command, GetItemsResponse).items]
+        )
 
     def get_tracks(self) -> Sequence[Union[Track, ArcTrack]]:
         """Retrieves all tracks and arc tracks on the board"""
@@ -508,12 +521,12 @@ class Board:
         else:
             cmd.types.extend(types or [])
 
-        return [
+        return self._to_concrete_items([
             unwrap(item)
             for item in self._kicad.send(
                 cmd, editor_commands_pb2.SelectionResponse
             ).items
-        ]
+        ])
 
     def add_to_selection(
         self, items: Union[BoardItem, Sequence[BoardItem]]
