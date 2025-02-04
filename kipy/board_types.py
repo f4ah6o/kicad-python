@@ -388,7 +388,7 @@ class BoardCircle(BoardShape, Circle):
             else ""
         )
         return (
-            f"BoardCircle(center={self.center}, radius={self.radius}, "
+            f"BoardCircle(center={self.center}, radius_point={self.radius_point}, "
             f"layer={BoardLayer.Name(self.layer)}{net_repr})"
         )
 
