@@ -1,27 +1,26 @@
-[tool.poetry]
+[project]
 name = "kicad-python"
 version = "0.1.2+dev"
 description = "KiCad API Python Bindings"
-authors = ["The KiCad Development Team"]
-homepage = "https://kicad.org/"
-repository = "https://gitlab.com/kicad/code/kicad-python"
-license = "MIT"
+license = { text = "MIT" }
 readme = "README.md"
-packages = [
-    { include = "kipy" },
-]
-include = ["**/kipy/**/*.py", "**/kipy/**/*.pyi"]
+requires-python = ">=3.9"
+authors = [{ name = "The KiCad Development Team" }]
+keywords = ["KiCad", "EDA", "API", "Python"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)"
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
 ]
+urls.homepage = "https://kicad.org/"
+urls.repository = "https://gitlab.com/kicad/code/kicad-python"
+urls.documentation = "https://kicad-python-python.readthedocs.io/en/latest/"
+dependencies = ["protobuf (>=5.29,<6)", "pynng (>=0.8.0,<0.9)"]
 
-[tool.poetry.dependencies]
-python = "<4.0,>=3.9"
-protobuf = "^5.29"
-pynng = "^0.8.0"
+[tool.poetry]
+packages = [{ include = "kipy" }]
+include = ["**/kipy/**/*.py", "**/kipy/**/*.pyi"]
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2024.10.9"
@@ -40,7 +39,7 @@ requires = [
     "poetry-core",
     "protoletariat == 3.3.*",
     "setuptools",
-    "mypy-protobuf == 3.6.*"
+    "mypy-protobuf == 3.6.*",
 ]
 build-backend = "poetry.core.masonry.api"
 
@@ -49,14 +48,10 @@ generate-setup-file = true
 script = "build.py"
 
 [tool.ruff]
-exclude = [
-    "kipy/proto"
-]
+exclude = ["kipy/proto"]
 
 [tool.mypy]
-exclude = [
-    "kipy/proto"
-]
+exclude = ["kipy/proto"]
 
 [[tool.mypy.overrides]]
 module = "pynng"
