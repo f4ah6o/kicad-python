@@ -71,6 +71,10 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 
 ## Release History
 
+### 0.2.1 (TBD)
+
+- Add support for footprint mounting style attribute (#19)
+
 ### 0.2.0 (February 19, 2025)
 
 - Updates for KiCad 9.0.0 release

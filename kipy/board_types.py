@@ -1209,6 +1209,19 @@ class FootprintAttributes(Wrapper):
     def exclude_from_position_files(self, exclude: bool):
         self._proto.exclude_from_position_files = exclude
 
+    @property
+    def mounting_style(self) -> board_types_pb2.FootprintMountingStyle.ValueType:
+        """
+        The mounting style of the footprint (SMD, through-hole, or unspecified)
+
+        .. versionadded:: 0.2.1 with KiCad 9.0.1
+        """
+        return self._proto.mounting_style
+
+    @mounting_style.setter
+    def mounting_style(self, style: board_types_pb2.FootprintMountingStyle.ValueType):
+        self._proto.mounting_style = style
+
 class Footprint3DModel(Wrapper):
     """Represents a 3D model associated with a footprint"""
 
