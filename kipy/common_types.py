@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from deprecated import deprecated
 from typing import Optional, Sequence
 from kipy.proto.common import types
 from kipy.proto.common.types import base_types_pb2
@@ -104,8 +105,21 @@ class TextAttributes(Wrapper):
         if proto is not None:
             self._proto.CopyFrom(proto)
 
+    def __repr__(self) -> str:
+        return (
+            f"TextAttributes(font_name={self.font_name}, angle={self.angle}, "
+            f"line_spacing={self.line_spacing}, italic={self.italic}, bold={self.bold}, "
+            f"underlined={self.underlined}, mirrored={self.mirrored}, multiline={self.multiline}, "
+            f"keep_upright={self.keep_upright}, size={self.size})"
+        )
+
     @property
+    @deprecated("This property will always return True in KiCad 9, and will be removed in KiCad 10")
     def visible(self) -> bool:
+        """
+        .. deprecated:: 0.2.1 removed in KiCad 9.0.1
+        Text items are always visible as of 9.0.1, only Fields can be set to hidden
+        """
         return self._proto.visible
 
     @visible.setter
@@ -121,12 +135,13 @@ class TextAttributes(Wrapper):
         self._proto.font_name = font_name
 
     @property
-    def angle(self) -> types.Angle:
-        return self._proto.angle
+    def angle(self) -> float:
+        """The orientation of the text in degrees"""
+        return self._proto.angle.value_degrees
 
     @angle.setter
-    def angle(self, angle: types.Angle):
-        self._proto.angle.CopyFrom(angle)
+    def angle(self, angle: float):
+        self._proto.angle.value_degrees = angle
 
     @property
     def line_spacing(self) -> float:
@@ -137,12 +152,12 @@ class TextAttributes(Wrapper):
         self._proto.line_spacing = line_spacing
 
     @property
-    def stroke_width(self) -> types.Distance:
-        return self._proto.stroke_width
+    def stroke_width(self) -> int:
+        return self._proto.stroke_width.value_nm
 
     @stroke_width.setter
-    def stroke_width(self, stroke_width: types.Distance):
-        self._proto.stroke_width.CopyFrom(stroke_width)
+    def stroke_width(self, stroke_width: int):
+        self._proto.stroke_width.value_nm = stroke_width
 
     @property
     def italic(self) -> bool:

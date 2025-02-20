@@ -652,6 +652,17 @@ class Field(BoardItem):
     def text(self, text: BoardText):
         self._proto.text.CopyFrom(text.proto)
 
+    @property
+    def visible(self) -> bool:
+        """
+        .. since:: 0.2.1 with KiCad 9.0.1
+        """
+        return self._proto.visible
+
+    @visible.setter
+    def visible(self, visible: bool):
+        self._proto.visible = visible
+
 
 class ThermalSpokeSettings(Wrapper):
     def __init__(
