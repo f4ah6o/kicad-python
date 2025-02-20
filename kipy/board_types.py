@@ -1209,6 +1209,10 @@ class FootprintAttributes(Wrapper):
     def exclude_from_position_files(self, exclude: bool):
         self._proto.exclude_from_position_files = exclude
 
+    @property
+    def do_not_populate(self) -> bool:
+        return self._proto.do_not_populate
+
 class Footprint3DModel(Wrapper):
     """Represents a 3D model associated with a footprint"""
 
