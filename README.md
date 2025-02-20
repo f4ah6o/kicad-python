@@ -59,8 +59,7 @@ This should print out the version of KiCad you have connected to.
 
 ## Documentation
 
-There is no documentation separate from the code comments and examples yet, sorry!  This will be
-more of a priority once the KiCad 9 release is stable.
+Auto-generated documentation is availeble at the [KiCad documentation site](https://docs.kicad.org/kicad-python-main/).
 
 ## Examples
 
