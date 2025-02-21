@@ -1221,6 +1221,14 @@ class FootprintAttributes(Wrapper):
         self._proto.exclude_from_position_files = exclude
 
     @property
+    def do_not_populate(self) -> bool:
+        return self._proto.do_not_populate
+
+    @do_not_populate.setter
+    def do_not_populate(self, do_not_populate: bool):
+        self._proto.do_not_populate = do_not_populate
+
+    @property
     def mounting_style(self) -> board_types_pb2.FootprintMountingStyle.ValueType:
         """
         The mounting style of the footprint (SMD, through-hole, or unspecified)
