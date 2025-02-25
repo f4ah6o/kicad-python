@@ -107,7 +107,12 @@ class Vector2(Wrapper):
         return math.sqrt(self.x * self.x + self.y * self.y)
 
     def angle(self) -> float:
+        """Returns the angle (direction) of the vector in radians"""
         return math.atan2(self.y, self.x)
+
+    def angle_degrees(self) -> float:
+        """Returns the angle (direction) of the vector in degrees"""
+        return math.degrees(self.angle())
 
 class Vector3D(Wrapper):
     """Wraps a kiapi.common.types.Vector3D"""
@@ -612,14 +617,36 @@ def arc_radius(start: Vector2, mid: Vector2, end: Vector2) -> float:
 
     return (start - center).length()
 
+def normalize_angle_degrees(angle: float) -> float:
+    """Normalizes an angle to fall within the range [0, 360)"""
+    while angle < 0.0:
+        angle += 360.0
+
+    while angle >= 360.0:
+        angle -= 360.0
+
+    return angle
+
+def normalize_angle_radians(angle: float) -> float:
+    """Normalizes an angle to fall within the range [0, 2*pi)"""
+    while angle < 0.0:
+        angle += 2 * math.pi
+
+    while angle >= 2 * math.pi:
+        angle -= 2 * math.pi
+
+    return angle
+
 def arc_start_angle(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
+    """Calculates the arc's starting angle in radians, normalized to [0, 2*pi)"""
     center = arc_center(start, mid, end)
     if center is None:
         return None
 
-    return (start - center).angle()
+    return normalize_angle_radians((start - center).angle())
 
 def arc_end_angle(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
+    """Calculates the arc's ending angle in radians, normalized to [0, 2*pi)"""
     center = arc_center(start, mid, end)
     if center is None:
         return None
@@ -632,7 +659,28 @@ def arc_end_angle(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]
     if angle == start_angle:
         angle += 2 * math.pi
 
-    while angle < start_angle:
-        angle += 2 * math.pi
+    return normalize_angle_radians(angle)
 
-    return angle
+def arc_start_angle_degrees(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
+    """Calculates the arc's starting angle in degrees, normalized to [0, 360)"""
+    center = arc_center(start, mid, end)
+    if center is None:
+        return None
+
+    return normalize_angle_degrees((start - center).angle_degrees())
+
+def arc_end_angle_degrees(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
+    """Calculates the arc's ending angle in degrees, normalized to [0, 360)"""
+    center = arc_center(start, mid, end)
+    if center is None:
+        return None
+
+    angle = (end - center).angle_degrees()
+
+    start_angle = arc_start_angle(start, mid, end)
+    assert(start_angle is not None)
+
+    if angle == start_angle:
+        angle += 360
+
+    return normalize_angle_degrees(angle)
