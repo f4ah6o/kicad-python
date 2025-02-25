@@ -23,6 +23,7 @@ from __future__ import annotations
 from typing import Optional, Union
 import math
 from kipy.proto.common import types
+from kipy.util import from_mm
 from kipy.wrapper import Wrapper
 
 class Vector2(Wrapper):
@@ -42,6 +43,16 @@ class Vector2(Wrapper):
         proto = types.Vector2()
         proto.x_nm = x_nm
         proto.y_nm = y_nm
+        return cls(proto)
+
+    @classmethod
+    def from_xy_mm(cls, x_mm: int, y_mm: int):
+        """Initialize Vector2 with x and y values in mm
+
+        .. since:: 0.2.1"""
+        proto = types.Vector2()
+        proto.x_nm = from_mm(x_mm)
+        proto.y_nm = from_mm(y_mm)
         return cls(proto)
 
     @property
