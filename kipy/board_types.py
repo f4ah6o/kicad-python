@@ -1202,7 +1202,10 @@ class Via(BoardItem):
         """The type of the via (through, blind/buried, or micro)
 
         Setting this property will also update the padstack drill start and end layers as a
-        side effect."""
+        side effect.
+
+        .. since:: 0.2.1 with KiCad 9.0.1
+        """
         return self._proto.type
 
     @type.setter
@@ -1229,7 +1232,9 @@ class Via(BoardItem):
         pad diameter on the front copper layer otherwise.  Setting this property will set the
         padstack mode to PST_NORMAL as a side-effect.
 
-        To get or set the diameter for other padstack types, use the padstack property directly."""
+        To get or set the diameter for other padstack types, use the padstack property directly.
+
+        .. since:: 0.2.1 with KiCad 9.0.1"""
         if len(self.padstack.copper_layers) == 0:
             raise ValueError("Unexpected empty padstack for via!")
 
