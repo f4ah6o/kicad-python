@@ -111,7 +111,10 @@ class Vector2(Wrapper):
         return math.atan2(self.y, self.x)
 
     def angle_degrees(self) -> float:
-        """Returns the angle (direction) of the vector in degrees"""
+        """Returns the angle (direction) of the vector in degrees
+
+        .. since:: 0.2.1
+        """
         return math.degrees(self.angle())
 
 class Vector3D(Wrapper):
@@ -618,7 +621,9 @@ def arc_radius(start: Vector2, mid: Vector2, end: Vector2) -> float:
     return (start - center).length()
 
 def normalize_angle_degrees(angle: float) -> float:
-    """Normalizes an angle to fall within the range [0, 360)"""
+    """Normalizes an angle to fall within the range [0, 360)
+
+    .. since:: 0.2.1"""
     while angle < 0.0:
         angle += 360.0
 
@@ -628,7 +633,9 @@ def normalize_angle_degrees(angle: float) -> float:
     return angle
 
 def normalize_angle_radians(angle: float) -> float:
-    """Normalizes an angle to fall within the range [0, 2*pi)"""
+    """Normalizes an angle to fall within the range [0, 2*pi)
+
+    .. since:: 0.2.1"""
     while angle < 0.0:
         angle += 2 * math.pi
 
@@ -662,7 +669,10 @@ def arc_end_angle(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]
     return normalize_angle_radians(angle)
 
 def arc_start_angle_degrees(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
-    """Calculates the arc's starting angle in degrees, normalized to [0, 360)"""
+    """Calculates the arc's starting angle in degrees, normalized to [0, 360)
+
+    .. since:: 0.2.1
+    """
     center = arc_center(start, mid, end)
     if center is None:
         return None
@@ -670,7 +680,10 @@ def arc_start_angle_degrees(start: Vector2, mid: Vector2, end: Vector2) -> Optio
     return normalize_angle_degrees((start - center).angle_degrees())
 
 def arc_end_angle_degrees(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
-    """Calculates the arc's ending angle in degrees, normalized to [0, 360)"""
+    """Calculates the arc's ending angle in degrees, normalized to [0, 360)
+
+    .. since:: 0.2.1
+    """
     center = arc_center(start, mid, end)
     if center is None:
         return None
