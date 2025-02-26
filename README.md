@@ -81,6 +81,7 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 - Add missing board layers User.10 through User.45 (#23)
 - Improve padstack-related APIs for creating new vias and pads (#21)
 - Change arc angle methods to return normalized angles; add degrees versions (#22)
+- Add `board.get_origin` and `board.get_origin` (#20)
 
 ### 0.2.0 (February 19, 2025)
 
