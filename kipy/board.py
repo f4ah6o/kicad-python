@@ -71,6 +71,9 @@ from kipy.proto.board.board_pb2 import (    # noqa
 from kipy.proto.board.board_types_pb2 import ( #noqa
     BoardLayer
 )
+from kipy.proto.board.board_commands_pb2 import ( #noqa
+    BoardOriginType
+)
 
 class BoardLayerGraphicsDefaults(Wrapper):
     """The default properties for graphic items added on a given class of board layer"""
@@ -607,6 +610,26 @@ class Board:
         cmd = editor_commands_pb2.GetTitleBlockInfo()
         cmd.document.CopyFrom(self._doc)
         return TitleBlockInfo(self._kicad.send(cmd, base_types_pb2.TitleBlockInfo))
+
+    def get_origin(self, origin_type: board_commands_pb2.BoardOriginType.ValueType) -> Vector2:
+        """Retrieves the specified (grid or drill/place) board origin
+
+        .. versionadded:: 0.2.1"""
+        cmd = board_commands_pb2.GetBoardOrigin()
+        cmd.board.CopyFrom(self._doc)
+        cmd.type = origin_type
+        return Vector2(self._kicad.send(cmd, base_types_pb2.Vector2))
+
+    def set_origin(self, origin_type: board_commands_pb2.BoardOriginType.ValueType,
+                   origin: Vector2):
+        """Sets the specified (grid or drill/place) board origin
+
+        .. versionadded:: 0.2.1"""
+        cmd = board_commands_pb2.SetBoardOrigin()
+        cmd.board.CopyFrom(self._doc)
+        cmd.type = origin_type
+        cmd.origin.CopyFrom(origin.proto)
+        self._kicad.send(cmd, Empty)
 
     @overload
     def expand_text_variables(self, text: str) -> str:
