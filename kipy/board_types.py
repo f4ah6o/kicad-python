@@ -266,6 +266,11 @@ class ArcTrack(BoardItem):
     def end_angle(self) -> Optional[float]:
         return arc_end_angle(self.start, self.mid, self.end)
 
+    def length(self) -> float:
+        """Calculates arc track length in nanometers"""
+        delta_angle = abs(self.end_angle() - self.start_angle())
+        return delta_angle*self.radius()
+
     def bounding_box(self) -> Box2:
         box = Box2()
         box.merge(self.start)
