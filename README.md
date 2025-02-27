@@ -76,8 +76,9 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 
 ### 0.3.0 (TBD)
 
-- Add support for footprint mounting style attribute (#19)
+- Add support for footprint mounting style attribute (#19) (Thanh Duong, !10)
 - Added `visible` property to `Field` and deprecate it from `TextAttributes` to match KiCad changes
+- Improve version checking functions(Lucas Gerads, !11)
 - Add missing board layers User.10 through User.45 (#23)
 - Improve padstack-related APIs for creating new vias and pads (#21)
 - Change arc angle methods to return normalized angles; add degrees versions (#22)
