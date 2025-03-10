@@ -69,18 +69,17 @@ class KiCadVersion:
     @staticmethod
     def from_git_describe(describe: str) -> 'KiCadVersion':
         parts = describe.split('-')
-        if len(parts) < 3:
-            raise ValueError(f"Invalid git describe format: {describe}")
-
         version_part = parts[0]
-        additional_info = '-'.join(parts[1:])
-
         major, minor, patch = map(int, version_part.split('.'))
 
-        return KiCadVersion(major, minor, patch, f"{version_part}-{additional_info}")
+        if len(parts) > 1:
+            additional_info = '-'.join(parts[1:])
+            return KiCadVersion(major, minor, patch, f"{version_part}-{additional_info}")
 
-    def __str__(self):
-        return self.full_version
+        return KiCadVersion(major, minor, patch, f"{version_part}")
+
+    def __repr__(self):
+        return f"{self.major}.{self.minor}.{self.patch} ({self.full_version})"
 
     def __eq__(self, other):
         if not isinstance(other, KiCadVersion):
