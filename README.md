@@ -74,6 +74,8 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 
 ## Release History
 
+### 0.4.0 (TBD)
+
 ### 0.3.0 (March 29, 2025)
 
 - Add support for footprint mounting style attribute (#19) (Thanh Duong, !10)
