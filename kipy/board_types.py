@@ -116,8 +116,9 @@ class Net(Wrapper):
 class Track(BoardItem):
     """Represents a straight track segment"""
 
-    def __init__(self, proto: Optional[board_types_pb2.Track] = None):
-        self._proto = board_types_pb2.Track()
+    def __init__(self, proto: Optional[board_types_pb2.Track] = None,
+                 proto_ref: Optional[board_types_pb2.Track] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Track()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -176,8 +177,9 @@ class Track(BoardItem):
 class ArcTrack(BoardItem):
     """Represents an arc track segment"""
 
-    def __init__(self, proto: Optional[board_types_pb2.Arc] = None):
-        self._proto = board_types_pb2.Arc()
+    def __init__(self, proto: Optional[board_types_pb2.Arc] = None,
+                 proto_ref: Optional[board_types_pb2.Arc] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Arc()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -292,8 +294,9 @@ class ArcTrack(BoardItem):
 class BoardShape(BoardItem):
     """Represents a graphic shape on a board or footprint"""
 
-    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None):
-        self._proto = board_types_pb2.BoardGraphicShape()
+    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None,
+                 proto_ref: Optional[board_types_pb2.BoardGraphicShape] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardGraphicShape()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -337,16 +340,23 @@ class BoardShape(BoardItem):
     def attributes(self, attributes: GraphicAttributes):
         self._proto.shape.attributes.CopyFrom(attributes.proto)
 
+    def move(self, delta: Vector2):
+        raise NotImplementedError(f"move() not implemented for {self.__class__.__name__}")
+
+    def rotate(self, angle: Angle, center: Vector2):
+        raise NotImplementedError(f"rotate() not implemented for {self.__class__.__name__}")
+
 class BoardSegment(BoardShape, Segment):
     """Represents a graphic line segment (not a track) on a board or footprint"""
 
-    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None):
-        self._proto = board_types_pb2.BoardGraphicShape()
+    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None,
+                 proto_ref: Optional[board_types_pb2.BoardGraphicShape] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardGraphicShape()
 
         if proto is not None:
             assert proto.shape.WhichOneof("geometry") == "segment"
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             self._proto.shape.segment.SetInParent()
 
         Segment.__init__(self, proto_ref=self._proto.shape)
@@ -363,16 +373,27 @@ class BoardSegment(BoardShape, Segment):
             f"{net_repr})"
         )
 
+    def move(self, delta: Vector2):
+        """Moves the segment by the given delta vector"""
+        self.start += delta
+        self.end += delta
+
+    def rotate(self, angle: Angle, center: Vector2):
+        """Rotates the segment around the given center point by the given angle"""
+        self.start = self.start.rotate(angle, center)
+        self.end = self.end.rotate(angle, center)
+
 class BoardArc(BoardShape, Arc):
     """Represents a graphic arc (not a track) on a board or footprint"""
 
-    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None):
-        self._proto = board_types_pb2.BoardGraphicShape()
+    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None,
+                 proto_ref: Optional[board_types_pb2.BoardGraphicShape] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardGraphicShape()
 
         if proto is not None:
             assert proto.shape.WhichOneof("geometry") == "arc"
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             self._proto.shape.arc.SetInParent()
 
         Arc.__init__(self, proto_ref=self._proto.shape)
@@ -389,16 +410,29 @@ class BoardArc(BoardShape, Arc):
             f"layer={BoardLayer.Name(self.layer)}{net_repr})"
         )
 
+    def move(self, delta: Vector2):
+        """Moves the arc by the given delta vector"""
+        self.start += delta
+        self.mid += delta
+        self.end += delta
+
+    def rotate(self, angle: Angle, center: Vector2):
+        """Rotates the arc around the given center point by the given angle"""
+        self.start = self.start.rotate(angle, center)
+        self.mid = self.mid.rotate(angle, center)
+        self.end = self.end.rotate(angle, center)
+
 class BoardCircle(BoardShape, Circle):
     """Represents a graphic circle on a board or footprint"""
 
-    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None):
-        self._proto = board_types_pb2.BoardGraphicShape()
+    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None,
+                 proto_ref: Optional[board_types_pb2.BoardGraphicShape] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardGraphicShape()
 
         if proto is not None:
             assert proto.shape.WhichOneof("geometry") == "circle"
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             self._proto.shape.circle.SetInParent()
 
         Circle.__init__(self, proto_ref=self._proto.shape)
@@ -415,16 +449,25 @@ class BoardCircle(BoardShape, Circle):
             f"layer={BoardLayer.Name(self.layer)}{net_repr})"
         )
 
+    def move(self, delta: Vector2):
+        """Moves the circle by the given delta vector"""
+        self.center += delta
+        self.radius_point += delta
+
+    def rotate(self, angle: Angle, center: Vector2):
+        pass
+
 class BoardRectangle(BoardShape, Rectangle):
     """Represents a graphic rectangle on a board or footprint"""
 
-    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None):
-        self._proto = board_types_pb2.BoardGraphicShape()
+    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None,
+                 proto_ref: Optional[board_types_pb2.BoardGraphicShape] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardGraphicShape()
 
         if proto is not None:
             assert proto.shape.WhichOneof("geometry") == "rectangle"
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             self._proto.shape.rectangle.SetInParent()
 
         Rectangle.__init__(self, proto_ref=self._proto.shape)
@@ -441,16 +484,27 @@ class BoardRectangle(BoardShape, Rectangle):
             f"layer={BoardLayer.Name(self.layer)}{net_repr}"
         )
 
+    def move(self, delta: Vector2):
+        """Moves the rectangle by the given delta vector"""
+        self.top_left += delta
+        self.bottom_right += delta
+
+    def rotate(self, angle: Angle, center: Vector2):
+        """Rotates the rectangle around the given center point by the given angle"""
+        self.top_left = self.top_left.rotate(angle, center)
+        self.bottom_right = self.bottom_right.rotate(angle, center)
+
 class BoardPolygon(BoardShape, Polygon):
     """Represents a graphic polygon on a board or footprint"""
 
-    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None):
-        self._proto = board_types_pb2.BoardGraphicShape()
+    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None,
+                 proto_ref: Optional[board_types_pb2.BoardGraphicShape] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardGraphicShape()
 
         if proto is not None:
             assert proto.shape.WhichOneof("geometry") == "polygon"
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             self._proto.shape.polygon.SetInParent()
 
         Polygon.__init__(self, proto_ref=self._proto.shape)
@@ -467,16 +521,27 @@ class BoardPolygon(BoardShape, Polygon):
             f"{net_repr})"
         )
 
+    def move(self, delta: Vector2):
+        """Moves the polygon by the given delta vector"""
+        for polygon in self.polygons:
+            polygon.move(delta)
+
+    def rotate(self, angle: Angle, center: Vector2):
+        """Rotates the polygon around the given center point by the given angle"""
+        for polygon in self.polygons:
+            polygon.rotate(angle, center)
+
 class BoardBezier(BoardShape, Bezier):
     """Represents a graphic bezier curve on a board or footprint"""
 
-    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None):
-        self._proto = board_types_pb2.BoardGraphicShape()
+    def __init__(self, proto: Optional[board_types_pb2.BoardGraphicShape] = None,
+                 proto_ref: Optional[board_types_pb2.BoardGraphicShape] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.BoardGraphicShape()
 
         if proto is not None:
             assert proto.shape.WhichOneof("geometry") == "bezier"
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             self._proto.shape.bezier.SetInParent()
 
         Bezier.__init__(self, proto_ref=self._proto.shape)
@@ -493,6 +558,20 @@ class BoardBezier(BoardShape, Bezier):
             f"end={self.end}, layer={BoardLayer.Name(self.layer)}{net_repr})"
         )
 
+    def move(self, delta: Vector2):
+        """Moves the bezier curve by the given delta vector"""
+        self.start += delta
+        self.control1 += delta
+        self.control2 += delta
+        self.end += delta
+
+    def rotate(self, angle: Angle, center: Vector2):
+        """Rotates the bezier curve around the given center point by the given angle"""
+        self.start = self.start.rotate(angle, center)
+        self.control1 = self.control1.rotate(angle, center)
+        self.control2 = self.control2.rotate(angle, center)
+        self.end = self.end.rotate(angle, center)
+
 def to_concrete_board_shape(shape: BoardShape) -> Optional[BoardShape]:
     cls = {
         "segment": BoardSegment,
@@ -504,7 +583,7 @@ def to_concrete_board_shape(shape: BoardShape) -> Optional[BoardShape]:
         None: None,
     }.get(shape._proto.shape.WhichOneof("geometry"), None)
 
-    return cls(shape._proto) if cls is not None else None
+    return cls(proto_ref=shape._proto) if cls is not None else None
 
 class BoardText(BoardItem):
     """Represents a free text object, or the text component of a field"""
@@ -1137,13 +1216,20 @@ class PadStack(BoardItem):
         return self._proto.copper_layers[-1]
 
 class Pad(BoardItem):
-    def __init__(self, proto: Optional[board_types_pb2.Pad] = None):
-        self._proto = board_types_pb2.Pad()
+    def __init__(self, proto: Optional[board_types_pb2.Pad] = None,
+                 proto_ref: Optional[board_types_pb2.Pad] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Pad()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             self.padstack.type = PST_NORMAL
+
+    def __repr__(self) -> str:
+        return (
+            f"Pad(position={self.position}, net={self.net.name}, "
+            f"type={PadType.Name(self.pad_type)})"
+        )
 
     @property
     def id(self) -> KIID:
@@ -1183,12 +1269,13 @@ class Pad(BoardItem):
 
 
 class Via(BoardItem):
-    def __init__(self, proto: Optional[board_types_pb2.Via] = None):
-        self._proto = board_types_pb2.Via()
+    def __init__(self, proto: Optional[board_types_pb2.Via] = None,
+                 proto_ref: Optional[board_types_pb2.Via] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Via()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             self.type = ViaType.VT_THROUGH
             self.padstack.type = PST_NORMAL
 
@@ -1347,8 +1434,9 @@ class FootprintAttributes(Wrapper):
 class Footprint3DModel(Wrapper):
     """Represents a 3D model associated with a footprint"""
 
-    def __init__(self, proto: Optional[board_types_pb2.Footprint3DModel] = None):
-        self._proto = board_types_pb2.Footprint3DModel()
+    def __init__(self, proto: Optional[board_types_pb2.Footprint3DModel] = None,
+                 proto_ref: Optional[board_types_pb2.Footprint3DModel] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Footprint3DModel()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -1410,7 +1498,9 @@ class Footprint3DModel(Wrapper):
         self._proto.opacity = opacity
 
 class Footprint(Wrapper):
-    """Represents a library footprint"""
+    """Represents the definition of a footprint (existing in a footprint library or on a board),
+    which contains the child objects of the footprint (pads, text, etc).  Footprint definitions are
+    contained by a FootprintInstance which represents a footprint placed on a board."""
 
     def __init__(
         self,
@@ -1421,8 +1511,18 @@ class Footprint(Wrapper):
             proto_ref if proto_ref is not None else board_types_pb2.Footprint()
         )
 
+        self._unwrapped_items = [unwrap(item) for item in self._proto.items]
+
         if proto is not None:
             self._proto.CopyFrom(proto)
+
+    def _pack(self):
+        """Packs all items in the footprint into the proto"""
+        del self._proto.items[:]
+        for item in self._unwrapped_items:
+            any = Any()
+            any.Pack(item.proto)
+            self._proto.items.append(any)
 
     def __repr__(self) -> str:
         return f"Footprint(id={self.id}, items={len(self.items)})"
@@ -1437,7 +1537,7 @@ class Footprint(Wrapper):
 
     @property
     def items(self) -> Sequence[Wrapper]:
-        return [unwrap(item) for item in self._proto.items]
+        return self._unwrapped_items
 
     @property
     def pads(self) -> Sequence[Pad]:
@@ -1489,6 +1589,14 @@ class FootprintInstance(BoardItem):
         if proto is not None:
             self._proto.CopyFrom(proto)
 
+        self._definition = Footprint(proto_ref=self._proto.definition)
+
+    @property
+    def proto(self):
+        self._definition._pack()
+        #self._proto.definition.CopyFrom(self._definition.proto)
+        return self.__dict__['_proto']
+
     def __repr__(self) -> str:
         return f"FootprintInstance(id={self.id}, pos={self.position}, layer={BoardLayer.Name(self.layer)})"
 
@@ -1502,7 +1610,30 @@ class FootprintInstance(BoardItem):
 
     @position.setter
     def position(self, position: Vector2):
+        """Changes the footprint position, which will also update the positions of all the
+        contained items since KiCad footprint children are stored with absolute positions"""
+        delta = position - self.position
         self._proto.position.CopyFrom(position.proto)
+
+        for field in [
+            self.reference_field,
+            self.value_field,
+            self.datasheet_field,
+            self.description_field,
+        ]:
+            field.text.position += delta
+
+        for item in self.definition.items:
+            if isinstance(item, Field):
+                item.text.position += delta
+            elif isinstance(item, Pad) or isinstance(item, BoardText):
+                item.position += delta
+            elif isinstance(item, Zone):
+                item.move(delta)
+            elif isinstance(item, BoardShape):
+                shape = to_concrete_board_shape(item)
+                assert shape
+                shape.move(delta)
 
     @property
     def orientation(self) -> Angle:
@@ -1510,7 +1641,35 @@ class FootprintInstance(BoardItem):
 
     @orientation.setter
     def orientation(self, orientation: Angle):
+        orientation.normalize180()
+        delta = orientation - self.orientation
         self._proto.orientation.CopyFrom(orientation.proto)
+
+        for field in [
+            self.reference_field,
+            self.value_field,
+            self.datasheet_field,
+            self.description_field,
+        ]:
+            field.text.position = field.text.position.rotate(delta, self.position)
+            field.text.attributes.angle += delta.degrees
+
+        for item in self.definition.items:
+            if isinstance(item, Field):
+                item.text.position = item.text.position.rotate(delta, self.position)
+                item.text.attributes.angle += delta.degrees
+            elif isinstance(item, Pad):
+                item.position = item.position.rotate(delta, self.position)
+                item.padstack.angle += delta
+            elif isinstance(item, BoardText):
+                item.position = item.position.rotate(delta, self.position)
+                item.attributes.angle += delta.degrees
+            elif isinstance(item, Zone):
+                item.rotate(delta, self.position)
+            elif isinstance(item, BoardShape):
+                shape = to_concrete_board_shape(item)
+                assert shape
+                shape.rotate(delta, self.position)
 
     @property
     def layer(self) -> BoardLayer.ValueType:
@@ -1533,7 +1692,7 @@ class FootprintInstance(BoardItem):
 
     @property
     def definition(self) -> Footprint:
-        return Footprint(proto_ref=self._proto.definition)
+        return self._definition
 
     @property
     def reference_field(self) -> Field:
@@ -1619,12 +1778,13 @@ class ZoneFilledPolygons(Wrapper):
 class Zone(BoardItem):
     """Represents a copper, graphical, or rule area zone on a board"""
 
-    def __init__(self, proto: Optional[board_types_pb2.Zone] = None):
-        self._proto = board_types_pb2.Zone()
+    def __init__(self, proto: Optional[board_types_pb2.Zone] = None,
+                 proto_ref: Optional[board_types_pb2.Zone] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Zone()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
-        else:
+        elif proto_ref is None:
             # Set reasonable defaults from KiCad ZONE_SETTINGS for convenience
             self.type = ZoneType.ZT_COPPER
             self.min_thickness = from_mm(0.25)
@@ -1804,12 +1964,27 @@ class Zone(BoardItem):
     def bounding_box(self) -> Box2:
         return self.outline.bounding_box()
 
+    def move(self, delta: Vector2):
+        """Moves the zone by the given delta vector"""
+        self.outline.move(delta)
+        for polygon in self.filled_polygons.values():
+            for shape in polygon:
+                shape.move(delta)
+
+    def rotate(self, angle: Angle, center: Vector2):
+        """Rotates the zone by the given angle around the given center point"""
+        self.outline.rotate(angle, center)
+
+        for polygon in self.filled_polygons.values():
+            for shape in polygon:
+                shape.rotate(angle, center)
 
 class Dimension(BoardItem):
     """Represents a dimension object on a board"""
 
-    def __init__(self, proto: Optional[board_types_pb2.Dimension] = None):
-        self._proto = board_types_pb2.Dimension()
+    def __init__(self, proto: Optional[board_types_pb2.Dimension] = None,
+                 proto_ref: Optional[board_types_pb2.Dimension] = None):
+        self._proto = proto_ref if proto_ref is not None else board_types_pb2.Dimension()
 
         if proto is not None:
             self._proto.CopyFrom(proto)
@@ -2255,4 +2430,4 @@ def unwrap(message: Any) -> Wrapper:
     concrete = unpack_any(message)
     wrapper = _proto_to_object.get(type(concrete), None)
     assert wrapper is not None
-    return wrapper(concrete)
+    return wrapper(proto=concrete)

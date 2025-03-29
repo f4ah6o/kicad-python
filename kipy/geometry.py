@@ -117,6 +117,27 @@ class Vector2(Wrapper):
         """
         return math.degrees(self.angle())
 
+    def rotate(self, angle: Angle, center: Vector2) -> Vector2:
+        """Rotates the vector in-place by an angle in degrees around a center point
+
+        :param angle: The angle to rotate by
+        :param center: The center point to rotate around
+        :return: The rotated vector
+
+        .. versionadded:: 0.4.0
+        """
+        pt_x = self.x - center.x
+        pt_y = self.y - center.y
+        rotation = normalize_angle_radians(angle.to_radians())
+
+        sin_angle = math.sin(rotation)
+        cos_angle = math.cos(rotation)
+
+        self.x = int(pt_y * sin_angle + pt_x * cos_angle) + center.x
+        self.y = int(pt_y * cos_angle - pt_x * sin_angle) + center.y
+
+        return self
+
 class Vector3D(Wrapper):
     """Wraps a kiapi.common.types.Vector3D"""
     def __init__(self, proto: Optional[types.Vector3D] = None):
@@ -244,6 +265,11 @@ class Box2:
         self._pos_proto.x_nm += delta.x
         self._pos_proto.y_nm += delta.y
 
+    def center(self) -> Vector2:
+        center_x = self._pos_proto.x_nm + self._size_proto.x_nm // 2
+        center_y = self._pos_proto.y_nm + self._size_proto.y_nm // 2
+        return Vector2.from_xy(center_x, center_y)
+
     def merge(self, other: Union[Vector2, Box2]):
         if isinstance(other, Vector2):
             min_x = min(self.pos.x, other.x)
@@ -313,6 +339,30 @@ class Angle(Wrapper):
 
     def to_radians(self) -> float:
         return math.radians(self.degrees)
+
+    def normalize(self) -> Angle:
+        """Normalizes the angle to fall within the range [0, 360)
+
+        .. versionadded:: 0.4.0"""
+        while self.degrees < 0.0:
+            self.degrees += 360.0
+
+        while self.degrees >= 360.0:
+            self.degrees -= 360.0
+
+        return self
+
+    def normalize180(self) -> Angle:
+        """Normalizes the angle to fall within the range [-180, 180)
+
+        .. versionadded:: 0.4.0"""
+        while self.degrees <= -180.0:
+            self.degrees += 360.0
+
+        while self.degrees > 180.0:
+            self.degrees -= 360.0
+
+        return self
 
 class ArcStartMidEnd(Wrapper):
     def __init__(
@@ -494,6 +544,15 @@ class PolyLine(Wrapper):
     def clear(self):
         self._proto.ClearField("nodes")
 
+    def rotate(self, delta: Angle, center: Vector2):
+        for node in self.nodes:
+            if node.has_point:
+                node.point = node.point.rotate(delta, center)
+            elif node.has_arc:
+                node.arc.start = node.arc.start.rotate(delta, center)
+                node.arc.mid = node.arc.mid.rotate(delta, center)
+                node.arc.end = node.arc.end.rotate(delta, center)
+
 class PolygonWithHoles(Wrapper):
     def __init__(
         self,
@@ -570,6 +629,15 @@ class PolygonWithHoles(Wrapper):
                     node.arc.start += delta
                     node.arc.mid += delta
                     node.arc.end += delta
+
+    def rotate(self, delta: Angle, center: Optional[Vector2] = None):
+        if center is None:
+            center = self.bounding_box().center()
+
+        self.outline.rotate(delta, center)
+
+        for hole in self.holes:
+            hole.rotate(delta, center)
 
 def arc_center(start: Vector2, mid: Vector2, end: Vector2) -> Optional[Vector2]:
     """

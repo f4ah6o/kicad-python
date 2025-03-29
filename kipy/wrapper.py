@@ -19,12 +19,13 @@
 # SOFTWARE.
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from google.protobuf.message import Message
 from kipy.proto.common.types.base_types_pb2 import KIID
 
 class Wrapper(ABC):
-    def __init__(self, proto: Message):
+    def __init__(self, proto: Optional[Message] = None, proto_ref: Optional[Message] = None):
         pass
 
     @property
