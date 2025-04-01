@@ -712,6 +712,18 @@ def normalize_angle_radians(angle: float) -> float:
 
     return angle
 
+def normalize_angle_pi_radians(angle: float) -> float:
+    """Normalizes an angle to fall within the range (-pi, pi]
+
+    .. versionadded:: 0.4.0"""
+    while angle <= -math.pi:
+        angle += 2 * math.pi
+
+    while angle > math.pi:
+        angle -= 2 * math.pi
+
+    return angle
+
 def arc_start_angle(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
     """Calculates the arc's starting angle in radians, normalized to [0, 2*pi)
 
@@ -739,6 +751,20 @@ def arc_end_angle(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]
         angle += 2 * math.pi
 
     return normalize_angle_radians(angle)
+
+def arc_angle(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
+        """Calculates the angle between the start and end of the arc in radians
+
+        :return: The angle of the arc, or None if the arc is degenerate
+        .. versionadded:: 0.4.0"""
+        center = arc_center(start, mid, end)
+        if center is None:
+            return None
+
+        angle1 = (mid-center).angle() - (start - center).angle()
+        angle2 = (end - center).angle() - (mid - center).angle()
+
+        return abs(normalize_angle_pi_radians(angle1) + normalize_angle_pi_radians(angle2))
 
 def arc_start_angle_degrees(start: Vector2, mid: Vector2, end: Vector2) -> Optional[float]:
     """Calculates the arc's starting angle in degrees, normalized to [0, 360)

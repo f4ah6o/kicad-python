@@ -47,11 +47,11 @@ from kipy.geometry import (
     Vector2,
     Vector3D,
     PolygonWithHoles,
+    arc_angle,
     arc_center,
     arc_radius,
     arc_start_angle,
     arc_end_angle,
-    normalize_angle_radians,
 )
 from kipy.util import unpack_any
 from kipy.util.board_layer import is_copper_layer, iter_copper_layers
@@ -278,6 +278,13 @@ class ArcTrack(BoardItem):
 
     def end_angle(self) -> Optional[float]:
         return arc_end_angle(self.start, self.mid, self.end)
+    
+    def angle(self) -> Optional[float]:
+        """Calculates the angle between the start and end of the arc in radians
+
+        :return: The angle of the arc, or None if the arc is degenerate
+        .. versionadded:: 0.4.0"""
+        return arc_angle(self.start, self.mid, self.end)
 
     def length(self) -> float:
         """Calculates arc track length in nanometers
@@ -285,14 +292,11 @@ class ArcTrack(BoardItem):
         :return: The length of the arc, or the distance between the start and end points if the
                  arc is degenerate
         .. versionadded:: 0.3.0"""
-        start = self.start_angle()
-        end = self.end_angle()
-
-        if start is None or end is None:
+        angle = self.angle()
+        if angle is None:
             return (self.end - self.start).length()
 
-        delta_angle = normalize_angle_radians(end - start)
-        return delta_angle*self.radius()
+        return angle*self.radius()
 
     def bounding_box(self) -> Box2:
         box = Box2()
@@ -300,7 +304,6 @@ class ArcTrack(BoardItem):
         box.merge(self.end)
         box.merge(self.mid)
         return box
-
 
 class BoardShape(BoardItem):
     """Represents a graphic shape on a board or footprint"""
