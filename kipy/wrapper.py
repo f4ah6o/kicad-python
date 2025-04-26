@@ -30,7 +30,15 @@ class Wrapper(ABC):
 
     @property
     def proto(self):
+        self._pack()
         return self.__dict__['_proto']
+
+    def _pack(self):
+        """Used in some cases to ensure the internal proto state matches the Python
+        class instance, for subclasses where the properties are not directly acting on
+        the proto object.
+        """
+        pass
 
 class Item(Wrapper):
     @property

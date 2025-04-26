@@ -667,10 +667,19 @@ class Polygon(GraphicShape):
             self._graphic_proto.CopyFrom(proto)
 
         assert self._graphic_proto.WhichOneof("geometry") == "polygon"
+        self._polygons = [
+            PolygonWithHoles(proto_ref=p) for p in self._graphic_proto.polygon.polygons
+        ]
+
+    def _pack(self):
+        self._graphic_proto.polygon.ClearField('polygons')
+        self._graphic_proto.polygon.polygons.extend([
+            polygon.proto for polygon in self._polygons
+        ])
 
     @property
-    def polygons(self) -> Sequence[PolygonWithHoles]:
-        return [PolygonWithHoles(proto_ref=p) for p in self._graphic_proto.polygon.polygons]
+    def polygons(self) -> list[PolygonWithHoles]:
+        return self._polygons
 
     def bounding_box(self) -> Box2:
         """Calculates the bounding box of the polygon"""
