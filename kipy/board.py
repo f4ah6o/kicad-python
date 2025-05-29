@@ -36,6 +36,7 @@ from kipy.board_types import (
     Track,
     Via,
     Zone,
+    Group,
     to_concrete_board_shape,
     to_concrete_dimension,
     unwrap
