@@ -437,6 +437,10 @@ class Board:
         """Retrieves all zones (including rule areas and graphic zones) on the board"""
         return [cast(Zone, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_ZONE])]
 
+    def get_groups(self) -> Sequence[Group]:
+        """Retrieves all groups on the board"""
+        return [cast(Group, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_GROUP])]
+
     def get_as_string(self) -> str:
         """Returns the board as a string in KiCad's board file format"""
         command = editor_commands_pb2.SaveDocumentToString()
