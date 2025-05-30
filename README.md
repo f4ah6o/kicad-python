@@ -81,6 +81,7 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 - Make it possible to add new `BoardPolygon`s in a more ergonomic way
 - Add `FootprintInstance.sheet_path` property (#37)
 - Add `board.check_padstack_presence_on_layers`, replacing FlashLayer in SWIG
+- Deprecate `Net.code` (net codes are an internal KiCad detail and API clients should ignore them)
 
 ### 0.3.0 (March 29, 2025)
 

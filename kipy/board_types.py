@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from deprecated import deprecated
 from typing import Dict, Sequence, Optional, Union
 from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
@@ -105,13 +106,21 @@ class Net(Wrapper):
     def name(self) -> str:
         return self._proto.name
 
+    @name.setter
+    def name(self, name: str):
+        self._proto.name = name
+
     @property
+    @deprecated("This property will be removed in KiCad 10; API clients should not rely on net codes")
     def code(self) -> int:
+        """
+        .. deprecated:: 0.4.0
+        """
         return self._proto.code.value
 
     def __eq__(self, other):
         if isinstance(other, Net):
-            return self.code == other.code and self.name == other.name
+            return self.name == other.name
         return NotImplemented
 
 
