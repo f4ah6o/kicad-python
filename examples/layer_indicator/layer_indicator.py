@@ -50,9 +50,9 @@ if __name__=='__main__':
     fpi.layer = BoardLayer.BL_F_Cu
     fpi.reference_field.text.value = "STACKUP1"
     fpi.reference_field.text.attributes = defaults.text
-    fpi.reference_field.text.attributes.visible = False
+    fpi.reference_field.visible = False
     fpi.value_field.text.attributes = defaults.text
-    fpi.value_field.text.attributes.visible = False
+    fpi.value_field.visible = False
     fpi.attributes.not_in_schematic = True
     fpi.attributes.exclude_from_bill_of_materials = True
     fpi.attributes.exclude_from_position_files = True
@@ -66,7 +66,6 @@ if __name__=='__main__':
         layer_text.value = "%d" % layer_idx
         layer_text.position = Vector2.from_xy(offset, 0)
         layer_text.attributes = defaults.text
-        layer_text.attributes.visible = True
         fp.add_item(layer_text)
 
         padding = 1 if layer_idx == 9 else 0.5
