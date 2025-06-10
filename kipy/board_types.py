@@ -2441,8 +2441,9 @@ class Group(BoardItem):
         if proto is not None:
             self._proto.CopyFrom(proto)
             
-        self._unwrapped_items = [unwrap(item) for item in self._proto.items]
-
+        self._item_ids = self._proto.items
+        self._unwrapped_items = None
+        
     @property
     def id(self) -> KIID:
         return self._proto.id
@@ -2461,9 +2462,7 @@ class Group(BoardItem):
         del self._proto.items[:]
         self._unwrapped_items = items
         for item in items:
-            any = Any()
-            any.Pack(item.proto)
-            self._proto.items.append(any)
+            self._proto.items.append(item.id)
     
     def __repr__(self) -> str:
         return f"Group(id={self.id}, items={self.items})"
@@ -2484,6 +2483,7 @@ _proto_to_object: Dict[type[Message], type[Wrapper]] = {
     board_types_pb2.Track: Track,
     board_types_pb2.Via: Via,
     board_types_pb2.Zone: Zone,
+    board_types_pb2.Group: Group,
 }
 
 

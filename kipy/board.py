@@ -58,7 +58,7 @@ from kipy.proto.common.commands.editor_commands_pb2 import (
     EndCommit, EndCommitResponse,
     CreateItems, CreateItemsResponse,
     UpdateItems, UpdateItemsResponse,
-    GetItems, GetItemsResponse,
+    GetItems, GetItemsById, GetItemsResponse,
     DeleteItems, DeleteItemsResponse,
     HitTest, HitTestResponse, HitTestResult
 )
@@ -377,6 +377,18 @@ class Board:
             [unwrap(item) for item in self._kicad.send(command, GetItemsResponse).items]
         )
 
+    def get_items_by_id(
+        self, ids: Union[KIID, Sequence[KIID]]
+    ) -> Sequence[Wrapper]:
+        """Retrieves items from the board by their Id, optionally filtering to a single or set of types."""
+        command = GetItemsById()
+        command.header.document.CopyFrom(self._doc)
+        command.items.extend(ids)
+
+        return self._to_concrete_items(
+            [unwrap(item) for item in self._kicad.send(command, GetItemsResponse).items]
+        )
+
     def get_tracks(self) -> Sequence[Union[Track, ArcTrack]]:
         """Retrieves all tracks and arc tracks on the board"""
         return [
@@ -439,7 +451,15 @@ class Board:
 
     def get_groups(self) -> Sequence[Group]:
         """Retrieves all groups on the board"""
-        return [cast(Group, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_GROUP])]
+        groups = [cast(Group, item) for item in self.get_items(types=[KiCadObjectType.KOT_PCB_GROUP])]
+        
+        # Unwrap items in groups
+        if len(groups) > 0:
+            for group in groups:
+                items = self.get_items_by_id(group._item_ids)
+                group._unwrapped_items = items
+                
+        return groups
 
     def get_as_string(self) -> str:
         """Returns the board as a string in KiCad's board file format"""
