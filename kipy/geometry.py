@@ -46,7 +46,7 @@ class Vector2(Wrapper):
         return cls(proto)
 
     @classmethod
-    def from_xy_mm(cls, x_mm: int, y_mm: int):
+    def from_xy_mm(cls, x_mm: float, y_mm: float):
         """Initialize Vector2 with x and y values in mm
 
         .. versionadded:: 0.3.0"""
