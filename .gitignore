@@ -19,6 +19,7 @@ MANIFEST
 .venv
 .DS_Store
 .vscode/
+.idea/
 
 # We don't want to lock dependency versions for this library right now
 poetry.lock
