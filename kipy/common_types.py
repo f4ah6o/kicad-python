@@ -27,6 +27,7 @@ from kipy.geometry import (
     Box2,
     PolygonWithHoles,
     Vector2,
+    arc_angle,
     arc_center,
     arc_radius,
     arc_start_angle,
@@ -603,6 +604,13 @@ class Arc(GraphicShape):
 
     def end_angle(self) -> Optional[float]:
         return arc_end_angle(self.start, self.mid, self.end)
+    
+    def angle(self) -> Optional[float]:
+        """Calculates the angle between the start and end of the arc in radians
+
+        :return: The angle of the arc, or None if the arc is degenerate
+        .. versionadded:: 0.4.0"""
+        return arc_angle(self.start, self.mid, self.end)
 
     def bounding_box(self) -> Box2:
         box = Box2()
