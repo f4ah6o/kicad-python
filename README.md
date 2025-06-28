@@ -85,6 +85,7 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 - Deprecate `Net.code` (net codes are an internal KiCad detail and API clients should ignore them)
 - Add `py.typed` type hinting indicator file (John Hagen, !16)
 - Fix `Vector2.from_xy_mm` type annotations (John Hagen, !17)
+- Add `Arc.angle` and `ArcTrack.angle`; some arc angle utilities (Quentin Freimanis, !14)
 
 ### 0.3.0 (March 29, 2025)
 
