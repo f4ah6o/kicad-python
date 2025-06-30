@@ -23,7 +23,9 @@ classifiers = [
 python = "<4.0,>=3.9"
 protobuf = "^5.29"
 pynng = "^0.8.0"
-deprecated = "^1.2"
+# 3.10: TypeAlias (mypy-protobuf generated code)
+# 3.13: @deprecated
+typing-extensions = { version = ">= 4.13.2", markers = "python_version < '3.13'" }
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2025.2.9"

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from deprecated import deprecated
+import sys
 from typing import Dict, Sequence, Optional, Union
 from google.protobuf.message import Message
 from google.protobuf.any_pb2 import Any
@@ -85,6 +85,12 @@ from kipy.proto.board.board_commands_pb2 import (  # noqa
     BoardFlipMode,
     RatsnestDisplayMode
 )
+
+if sys.version_info >= (3, 13):
+    from warnings import deprecated
+else:
+    from typing_extensions import deprecated
+
 
 class BoardItem(Item):
     @property
