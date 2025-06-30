@@ -490,7 +490,9 @@ class Board:
         self._kicad.send(command, DeleteItemsResponse)
 
     def remove_items_by_id(self, items: Union[KIID, Sequence[KIID]]):
-        """Deletes one or more items from the board"""
+        """Deletes one or more items from the board using their unique IDs
+
+        .. versionadded:: 0.4.0"""
         command = DeleteItems()
         command.header.document.CopyFrom(self._doc)
 
