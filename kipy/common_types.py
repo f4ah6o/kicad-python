@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from deprecated import deprecated
+import sys
 from typing import Optional, Sequence
 from kipy.proto.common import types
 from kipy.proto.common.types import base_types_pb2
@@ -41,6 +41,10 @@ from kipy.proto.common.types.enums_pb2 import (  # noqa
     VerticalAlignment,
 )
 
+if sys.version_info >= (3, 13):
+    from warnings import deprecated
+else:
+    from typing_extensions import deprecated
 
 class Commit:
     def __init__(self, id: KIID):
