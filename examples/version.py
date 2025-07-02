@@ -21,7 +21,6 @@
 # SOFTWARE.
 
 from kipy import KiCad
-from kipy.kicad import KiCadVersion
 
 if __name__=='__main__':
     try:
