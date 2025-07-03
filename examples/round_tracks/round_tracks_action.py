@@ -129,7 +129,7 @@ class RoundTracks(RoundTracksDialog):
 
         anySelected = False
         for item in self.board.get_selection():
-            if type(item) == Track:
+            if isinstance(item, Track):
                 anySelected = True
                 break
 
@@ -383,7 +383,7 @@ class RoundTracks(RoundTracksDialog):
                     # if there are any arcs or vias present, skip the intersection entirely
                     skip = False
                     for t1 in tracksHere:
-                        if type(t1) == ArcTrack or ip in viaLocations:
+                        if isinstance(t1, ArcTrack) or ip in viaLocations:
                             skip = True
                             break
 
