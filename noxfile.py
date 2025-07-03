@@ -24,7 +24,7 @@ from nox.sessions import Session
 @nox.session
 def lint(session: Session):
     session.install("ruff")
-    session.run("ruff", "check", "kipy")
+    session.run("ruff", "check", "examples", "kipy", "tests", "tools")
 
 @nox.session
 def mypy(session: Session) -> None:
