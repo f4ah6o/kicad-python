@@ -459,13 +459,13 @@ class PolyLineNode(Wrapper):
             self._proto.CopyFrom(proto)
 
     @staticmethod
-    def from_point(point: Vector2):
+    def from_point(point: Vector2) -> PolyLineNode:
         n = PolyLineNode()
         n.point = point
         return n
 
     @staticmethod
-    def from_xy(x: int, y: int):
+    def from_xy(x: int, y: int) -> PolyLineNode:
         n = PolyLineNode()
         n.point = Vector2.from_xy(x, y)
         return n
