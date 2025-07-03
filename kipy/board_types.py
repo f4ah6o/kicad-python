@@ -67,6 +67,7 @@ from kipy.proto.board.board_types_pb2 import (  # noqa
     DrillShape,
     IslandRemovalMode,
     PadType,
+    PadStackType,
     PadStackShape,
     SolderMaskMode,
     SolderPasteMode,
@@ -1595,9 +1596,7 @@ class Footprint(Wrapper):
         return [item for item in self.items if isinstance(item, Footprint3DModel)]
 
     def add_item(self, item: Wrapper):
-        any = Any()
-        any.Pack(item.proto)
-        self._proto.items.append(any)
+        self._unwrapped_items.append(item)
 
 
 class FootprintInstance(BoardItem):
@@ -1614,7 +1613,6 @@ class FootprintInstance(BoardItem):
     @property
     def proto(self):
         self._definition._pack()
-        #self._proto.definition.CopyFrom(self._definition.proto)
         return self.__dict__['_proto']
 
     def __repr__(self) -> str:
