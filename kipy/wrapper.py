@@ -24,6 +24,7 @@ from typing import Optional
 from google.protobuf.message import Message
 from kipy.proto.common.types.base_types_pb2 import KIID
 
+
 class Wrapper(ABC):
     def __init__(self, proto: Optional[Message] = None, proto_ref: Optional[Message] = None):
         pass
@@ -31,7 +32,7 @@ class Wrapper(ABC):
     @property
     def proto(self):
         self._pack()
-        return self.__dict__['_proto']
+        return self.__dict__["_proto"]
 
     def _pack(self):
         """Used in some cases to ensure the internal proto state matches the Python
@@ -39,6 +40,7 @@ class Wrapper(ABC):
         the proto object.
         """
         pass
+
 
 class Item(Wrapper):
     @property

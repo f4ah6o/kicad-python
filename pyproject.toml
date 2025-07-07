@@ -62,6 +62,7 @@ generate-setup-file = true
 script = "build.py"
 
 [tool.ruff]
+line-length = 99
 exclude = [
     "kipy/proto"
 ]
