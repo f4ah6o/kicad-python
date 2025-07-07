@@ -773,12 +773,19 @@ class Field(BoardItem):
     def layer(self) -> BoardLayer.ValueType:
         return self._proto.text.layer
 
+    @layer.setter
+    def layer(self, layer: BoardLayer.ValueType):
+        self._proto.text.layer = layer
+
     @property
     def text(self) -> BoardText:
         return BoardText(proto_ref=self._proto.text)
 
     @text.setter
     def text(self, text: BoardText):
+        """
+        .. versionadded:: 0.4.0 (setter)
+        """
         self._proto.text.CopyFrom(text.proto)
 
     @property
