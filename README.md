@@ -77,7 +77,7 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 
 ## Release History
 
-### 0.4.0 (TBD)
+### 0.4.0 (July 8, 2025)
 
 - Fix ability to move and rotate footprints
 - Fix ArcTrack length calculation (Quentin Freimanis, !13)
