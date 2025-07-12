@@ -11,4 +11,4 @@ build:
   script:
     - pipx install poetry
     - /root/.local/bin/poetry install -v
-    - pytest
+    - /root/.local/bin/poetry run pytest
