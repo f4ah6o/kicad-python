@@ -7,7 +7,7 @@ build:
   before_script:
     - git submodule update --init --depth 1
     - dnf install -y protobuf-compiler pipx python3-virtualenv
-    - pipx ensurepath --global
   script:
-    - pipx run poetry install -v
+    - pipx install poetry
+    - poetry install -v
     - pytest
