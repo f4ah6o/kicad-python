@@ -722,6 +722,10 @@ class Polygon(GraphicShape):
     def polygons(self) -> list[PolygonWithHoles]:
         return self._polygons
 
+    @polygons.setter
+    def polygons(self, polygons: list[PolygonWithHoles]):
+        self._polygons = polygons
+
     def bounding_box(self) -> Box2:
         """Calculates the bounding box of the polygon"""
         box = None

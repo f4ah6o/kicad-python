@@ -38,6 +38,7 @@ _any_urls = {
     "type.googleapis.com/kiapi.board.types.BoardText": board_types_pb2.BoardText,
     "type.googleapis.com/kiapi.board.types.BoardTextBox": board_types_pb2.BoardTextBox,
     "type.googleapis.com/kiapi.board.types.BoardGraphicShape": board_types_pb2.BoardGraphicShape,
+    "type.googleapis.com/kiapi.board.types.Net": board_types_pb2.Net,
     "type.googleapis.com/kiapi.board.types.Pad": board_types_pb2.Pad,
     "type.googleapis.com/kiapi.board.types.Zone": board_types_pb2.Zone,
     "type.googleapis.com/kiapi.board.types.Dimension": board_types_pb2.Dimension,
