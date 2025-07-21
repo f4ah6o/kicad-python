@@ -25,7 +25,9 @@ dependencies = [
 
 [project.urls]
 homepage = "https://kicad.org/"
+documentation = "https://docs.kicad.org/kicad-python-main/"
 repository = "https://gitlab.com/kicad/code/kicad-python"
+issues = "https://gitlab.com/kicad/code/kicad-python/-/issues"
 
 [tool.poetry]
 packages = [
