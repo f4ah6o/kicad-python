@@ -1310,7 +1310,7 @@ class Pad(BoardItem):
     @property
     def pad_to_die_length(self) -> int:
         """
-        .. versionadded:: 0.5.0
+        .. versionadded:: 0.5.0 (with KiCad 9.0.4)
         """
         return self._proto.pad_to_die_length.value_nm
 
