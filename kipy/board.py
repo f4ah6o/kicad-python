@@ -615,6 +615,53 @@ class Board:
             self._kicad.send(command, board_commands_pb2.BoardStackupResponse).stackup
         )
 
+    def get_copper_layer_count(self) -> int:
+        """
+        :return: The number of copper layers on the current board
+
+        .. versionadded:: 0.5.0 (with KiCad 9.0.5)
+        """
+        cmd = board_commands_pb2.GetBoardEnabledLayers()
+        cmd.board.CopyFrom(self._doc)
+        response = self._kicad.send(cmd, board_commands_pb2.BoardEnabledLayersResponse)
+        return response.copper_layer_count
+
+    def get_enabled_layers(self) -> List[board_types_pb2.BoardLayer.ValueType]:
+        """
+        Retrieves the list of all enabled layers in the board, including copper and non-copper layers.
+
+        :return: A list of enabled BoardLayer enums.
+
+        .. versionadded:: 0.5.0 (with KiCad 9.0.5)
+        """
+        cmd = board_commands_pb2.GetBoardEnabledLayers()
+        cmd.board.CopyFrom(self._doc)
+        response = self._kicad.send(cmd, board_commands_pb2.BoardEnabledLayersResponse)
+        return list(response.layers)
+
+    def set_enabled_layers(
+        self,
+        copper_layer_count: int,
+        layers: Sequence[board_types_pb2.BoardLayer.ValueType],
+    ) -> List[board_types_pb2.BoardLayer.ValueType]:
+        """
+        Sets the copper layer count and enabled non-copper layers for the board.
+
+        WARNING: Any existing content on layers that are removed by this call is deleted. This operation cannot be undone.
+
+        :param copper_layer_count: The number of copper layers to enable (must be even and >= 2).
+        :param layers: The non-copper layers to enable.
+        :return: The updated list of enabled BoardLayer enums.
+
+        .. versionadded:: 0.5.0 (with KiCad 9.0.5)
+        """
+        cmd = board_commands_pb2.SetBoardEnabledLayers()
+        cmd.board.CopyFrom(self._doc)
+        cmd.copper_layer_count = copper_layer_count
+        cmd.layers.extend(layers)
+        response = self._kicad.send(cmd, board_commands_pb2.BoardEnabledLayersResponse)
+        return list(response.layers)
+
     def get_graphics_defaults(self) -> Dict[int, BoardLayerGraphicsDefaults]:
         """Retrieves the default graphics properties for each layer class on the board"""
         cmd = board_commands_pb2.GetGraphicsDefaults()

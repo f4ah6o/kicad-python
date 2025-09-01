@@ -80,6 +80,7 @@ plugins, copy or symlink them into the appropriate plugins path in order for KiC
 ### 0.5.0 (TBD)
 
 - Add `Pad.pad_to_die_length` (KiCad 9.0.4)
+- Add `Board.get_enabled_layers`, `Board.set_enabled_layers`, and `Board.get_copper_layer_count` (KiCad 9.0.5)
 
 ### 0.4.0 (July 8, 2025)
 
