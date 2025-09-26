@@ -44,7 +44,17 @@ def _default_socket_path() -> str:
     path = os.environ.get('KICAD_API_SOCKET')
     if path is not None:
         return path
-    return f'ipc://{gettempdir()}\\kicad\\api.sock' if platform.system() == 'Windows' else 'ipc:///tmp/kicad/api.sock'
+    if platform.system() == 'Windows':
+        return f'ipc://{gettempdir()}\\kicad\\api.sock'
+    else:
+        # Check for default socket path of KiCad flatpak on flathub
+        home = os.environ.get('HOME')
+        if home is not None:
+            flatpak_socket_path = f'{home}/.var/app/org.kicad.KiCad/cache/tmp/kicad/api.sock'
+            if os.path.exists(flatpak_socket_path):
+                return f'ipc://{flatpak_socket_path}'
+
+        return 'ipc:///tmp/kicad/api.sock'
 
 def _random_client_name() -> str:
     return 'anonymous-'+''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
