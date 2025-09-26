@@ -132,7 +132,8 @@ class NetClass(Wrapper):
 
     @property
     def via_diameter(self) -> Optional[int]:
-        if (self._proto.board.HasField("via_stack")
+        if (
+            self._proto.board.HasField("via_stack")
             and len(self._proto.board.via_stack.copper_layers) > 0
         ):
             return self._proto.board.via_stack.copper_layers[0].size.x_nm
@@ -145,11 +146,10 @@ class NetClass(Wrapper):
         else:
             self._proto.board.via_stack.copper_layers[0].size.x_nm = diameter
 
-
     @property
     def via_drill(self) -> Optional[int]:
-        if (self._proto.board.HasField("via_stack")
-            and self._proto.board.via_stack.HasField("drill")
+        if self._proto.board.HasField("via_stack") and self._proto.board.via_stack.HasField(
+            "drill"
         ):
             return self._proto.board.via_stack.drill.diameter.x_nm
         return None
@@ -176,9 +176,9 @@ class NetClass(Wrapper):
 
     @property
     def microvia_drill(self) -> Optional[int]:
-        if (self._proto.board.HasField("microvia_stack")
-            and self._proto.board.microvia_stack.HasField("drill")
-        ):
+        if self._proto.board.HasField(
+            "microvia_stack"
+        ) and self._proto.board.microvia_stack.HasField("drill"):
             return self._proto.board.microvia_stack.drill.diameter.x_nm
         return None
 
@@ -241,8 +241,11 @@ class NetClass(Wrapper):
         else:
             self._proto.schematic.color.CopyFrom(color.proto)
 
+
 class TextVariables(Wrapper):
-    def __init__(self, proto: project_settings_pb2.TextVariables = project_settings_pb2.TextVariables()):
+    def __init__(
+        self, proto: project_settings_pb2.TextVariables = project_settings_pb2.TextVariables()
+    ):
         self._proto = proto
 
     @property

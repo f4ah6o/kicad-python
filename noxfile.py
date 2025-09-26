@@ -21,10 +21,26 @@
 import nox
 from nox.sessions import Session
 
+nox.options.sessions = ["lint", "mypy", "tests"]
+
+PROJECT_LINT_DIRS = ["examples", "kipy", "tests", "tools"]
+
 @nox.session
-def lint(session: Session):
+def fmt(session: Session):
     session.install("ruff")
-    session.run("ruff", "check", "examples", "kipy", "tests", "tools")
+    session.run("ruff", "format", *PROJECT_LINT_DIRS)
+
+@nox.session
+@nox.parametrize(
+    "command",
+    [
+        nox.param(["ruff", "check", *PROJECT_LINT_DIRS], id="lint_check"),
+        nox.param(["ruff", "format", "--check", *PROJECT_LINT_DIRS], id="format_check"),
+    ],
+)
+def lint(session: Session, command: list[str]) -> None:
+    session.install("ruff")
+    session.run(*command)
 
 @nox.session
 def mypy(session: Session) -> None:

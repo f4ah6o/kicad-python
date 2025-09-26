@@ -61,6 +61,6 @@ are no other instances of KiCad open at the time).
 
 # Testing changes
 
-Before committing, run `nox`, which will run checks such as linting.
+Before committing, run `nox -s fmt` to format the code and `nox`, to run checks such as linting.
 
 We'll eventually add tests which will run here too :)
