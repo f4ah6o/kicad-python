@@ -476,7 +476,9 @@ class BoardCircle(BoardShape, Circle):
         self.radius_point += delta
 
     def rotate(self, angle: Angle, center: Vector2):
-        pass
+        """Rotates the circle around the given center point by the given angle"""
+        self.center = self.center.rotate(angle, center)
+        self.radius_point = self.radius_point.rotate(angle, center)
 
 class BoardRectangle(BoardShape, Rectangle):
     """Represents a graphic rectangle on a board or footprint"""
