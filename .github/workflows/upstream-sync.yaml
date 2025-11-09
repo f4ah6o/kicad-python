@@ -26,14 +26,18 @@ jobs:
           git checkout -b sync-upstream-$(date +%Y%m%d)
           git merge upstream/main --no-edit
 
+      - name: Set date variable
+          id: date
+          run: echo "DATE=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: sync-upstream-$(date +%Y%m%d)
-          title: "Sync with upstream - $(date +%Y-%m-%d)"
-          body: |
-            Automated sync with upstream repository.
-            
-            Please review the changes before merging.
-          commit-message: "Sync with upstream"
+          uses: peter-evans/create-pull-request@v5
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            branch: sync-upstream-${{ steps.date.outputs.DATE }}
+            title: "Sync with upstream - ${{ steps.date.outputs.DATE }}"
+            body: |
+              Automated sync with upstream repository.
+      
+              Please review the changes before merging.
+            commit-message: "Sync with upstream"
