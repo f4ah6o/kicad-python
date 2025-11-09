@@ -1,1 +1,39 @@
+name: Sync with Upstream
 
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync with upstream
+        run: |
+          git remote add upstream https://gitlab.com/kicad/code/kicad-python.git || true
+          git fetch upstream
+          git checkout -b sync-upstream-$(date +%Y%m%d)
+          git merge upstream/main --no-edit
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: sync-upstream-$(date +%Y%m%d)
+          title: "Sync with upstream - $(date +%Y-%m-%d)"
+          body: |
+            Automated sync with upstream repository.
+            
+            Please review the changes before merging.
+          commit-message: "Sync with upstream"
